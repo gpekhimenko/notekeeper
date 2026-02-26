@@ -1,18 +1,21 @@
 "use client";
 
 import { DayPicker } from "react-day-picker";
+import { signOut } from "next-auth/react";
 import { NotesStore } from "../lib/types";
 
 interface CalendarSidebarProps {
   selectedDate: string;
   notes: NotesStore;
   onSelectDate: (date: string) => void;
+  userEmail?: string;
 }
 
 export default function CalendarSidebar({
   selectedDate,
   notes,
   onSelectDate,
+  userEmail,
 }: CalendarSidebarProps) {
   const selected = new Date(selectedDate + "T00:00:00");
 
@@ -81,6 +84,18 @@ export default function CalendarSidebar({
           background: white;
         }
       `}</style>
+
+      {userEmail && (
+        <div className="border-t border-zinc-200 px-4 py-3">
+          <p className="text-xs text-zinc-500 truncate mb-2">{userEmail}</p>
+          <button
+            onClick={() => signOut()}
+            className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

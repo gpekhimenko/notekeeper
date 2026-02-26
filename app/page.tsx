@@ -1,35 +1,44 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { notesReducer, initialState } from "./lib/useNotesReducer";
 import { Note, NotesStore } from "./lib/types";
+import { fetchNotes, createNote, updateNote, deleteNote } from "./lib/notesApi";
 import CalendarSidebar from "./components/CalendarSidebar";
 import NotesList from "./components/NotesList";
 import NoteEditor from "./components/NoteEditor";
 import EmptyState from "./components/EmptyState";
 
-const STORAGE_KEY = "notekeeper_notes";
-
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [state, dispatch] = useReducer(notesReducer, initialState);
+  const [loading, setLoading] = useState(true);
 
-  // Load notes from localStorage on mount
+  // Redirect to login if not authenticated
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as NotesStore;
-        dispatch({ type: "LOAD_NOTES", payload: parsed });
-      }
-    } catch {
-      // ignore corrupt data
+    if (status === "unauthenticated") {
+      router.replace("/login");
     }
-  }, []);
+  }, [status, router]);
 
-  // Sync notes to localStorage whenever they change
+  // Load notes from API on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.notes));
-  }, [state.notes]);
+    if (status !== "authenticated") return;
+
+    fetchNotes()
+      .then((notes) => {
+        const store: NotesStore = {};
+        for (const n of notes) {
+          store[n.id] = n;
+        }
+        dispatch({ type: "LOAD_NOTES", payload: store });
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [status]);
 
   const notesForDate = Object.values(state.notes)
     .filter((n) => n.date === state.selectedDate)
@@ -39,12 +48,36 @@ export default function Home() {
     ? (state.notes[state.selectedNoteId] ?? null)
     : null;
 
-  function handleSave(payload: Omit<Note, "createdAt" | "updatedAt">) {
-    dispatch({ type: "SAVE_NOTE", payload });
+  async function handleSave(payload: Omit<Note, "createdAt" | "updatedAt">) {
+    const isNew = !state.notes[payload.id];
+    try {
+      const saved = isNew
+        ? await createNote(payload)
+        : await updateNote(payload);
+      dispatch({
+        type: "SAVE_NOTE",
+        payload: { id: saved.id, date: saved.date, title: saved.title, body: saved.body },
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  function handleDelete(id: string) {
-    dispatch({ type: "DELETE_NOTE", payload: id });
+  async function handleDelete(id: string) {
+    try {
+      await deleteNote(id);
+      dispatch({ type: "DELETE_NOTE", payload: id });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <p className="text-sm text-zinc-400">Loading…</p>
+      </div>
+    );
   }
 
   const showEditor =
@@ -58,6 +91,7 @@ export default function Home() {
         selectedDate={state.selectedDate}
         notes={state.notes}
         onSelectDate={(date) => dispatch({ type: "SELECT_DATE", payload: date })}
+        userEmail={session?.user?.email ?? undefined}
       />
 
       <main className="flex flex-1 overflow-hidden">
