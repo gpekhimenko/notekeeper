@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Note } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
 
@@ -25,22 +26,28 @@ export default function NoteEditor({
 }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
 
   // Reset draft when note or mode changes
   useEffect(() => {
     if (editorMode === "new") {
       setTitle("");
       setBody("");
+      setTags([]);
+      setTagInput("");
     } else if (note) {
       setTitle(note.title);
       setBody(note.body);
+      setTags(note.tags);
+      setTagInput("");
     }
   }, [note?.id, editorMode]);
 
   function handleSave() {
     const id = editorMode === "new" ? generateNoteId() : note!.id;
     const date = editorMode === "new" ? selectedDate : note!.date;
-    onSave({ id, date, title: title.trim(), body });
+    onSave({ id, date, title: title.trim(), body, tags });
   }
 
   function handleDelete() {
@@ -48,6 +55,21 @@ export default function NoteEditor({
     if (window.confirm("Delete this note?")) {
       onDelete(note.id);
     }
+  }
+
+  function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const tag = tagInput.trim().toLowerCase();
+      if (tag && !tags.includes(tag)) {
+        setTags([...tags, tag]);
+      }
+      setTagInput("");
+    }
+  }
+
+  function removeTag(tag: string) {
+    setTags(tags.filter((t) => t !== tag));
   }
 
   const isEditing = editorMode === "edit" || editorMode === "new";
@@ -112,20 +134,85 @@ export default function NoteEditor({
               autoFocus
             />
             <textarea
-              placeholder="Write your note…"
+              placeholder="Write your note… (supports Markdown)"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="flex-1 w-full text-sm text-zinc-700 placeholder-zinc-300 outline-none resize-none leading-relaxed min-h-[300px]"
+              className="flex-1 w-full text-sm text-zinc-700 placeholder-zinc-300 outline-none resize-none leading-relaxed min-h-[300px] font-mono"
             />
+
+            {/* Tag editing */}
+            <div className="mt-4 pt-4 border-t border-zinc-100">
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => removeTag(tag)}
+                      className="text-blue-400 hover:text-blue-700 leading-none"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Add tag and press Enter…"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                className="text-sm text-zinc-700 placeholder-zinc-300 outline-none border border-zinc-200 rounded px-2 py-1 w-48"
+              />
+            </div>
           </>
         ) : note ? (
           <>
             <h2 className="text-2xl font-semibold text-zinc-800 mb-4 pb-2 border-b border-zinc-100">
               {note.title || "Untitled"}
             </h2>
-            <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap">
-              {note.body}
-            </p>
+            {note.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {note.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="prose prose-sm max-w-none text-zinc-700 leading-relaxed">
+              <ReactMarkdown
+                components={{
+                  h1: ({ children }) => <h1 className="text-2xl font-bold text-zinc-800 mt-6 mb-3">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-xl font-semibold text-zinc-800 mt-5 mb-2">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-lg font-semibold text-zinc-800 mt-4 mb-2">{children}</h3>,
+                  p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                  li: ({ children }) => <li className="text-sm">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-zinc-900">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  code: ({ children, className }) => {
+                    const isBlock = className?.includes("language-");
+                    if (isBlock) {
+                      return <code className="block bg-zinc-100 text-zinc-800 rounded p-3 text-xs font-mono overflow-x-auto mb-3 whitespace-pre">{children}</code>;
+                    }
+                    return <code className="bg-zinc-100 text-zinc-800 rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>;
+                  },
+                  pre: ({ children }) => <pre className="mb-3">{children}</pre>,
+                  blockquote: ({ children }) => <blockquote className="border-l-4 border-zinc-300 pl-4 italic text-zinc-500 mb-3">{children}</blockquote>,
+                  a: ({ href, children }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                  hr: () => <hr className="border-zinc-200 my-4" />,
+                }}
+              >
+                {note.body}
+              </ReactMarkdown>
+            </div>
           </>
         ) : null}
       </div>

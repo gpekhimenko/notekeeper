@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS notes (
   date TEXT NOT NULL,           -- "YYYY-MM-DD"
   title TEXT NOT NULL DEFAULT '',
   body TEXT NOT NULL DEFAULT '',
+  tags TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

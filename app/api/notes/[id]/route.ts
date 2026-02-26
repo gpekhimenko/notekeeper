@@ -15,7 +15,7 @@ export async function GET(
   const { id } = await params;
 
   const { rows } = await pool.query(
-    `SELECT id, date, title, body, created_at, updated_at
+    `SELECT id, date, title, body, tags, created_at, updated_at
      FROM notes
      WHERE id = $1 AND user_id = $2`,
     [id, session.user.id]
@@ -31,6 +31,7 @@ export async function GET(
     date: r.date,
     title: r.title,
     body: r.body,
+    tags: r.tags ?? [],
     createdAt: new Date(r.created_at).getTime(),
     updatedAt: new Date(r.updated_at).getTime(),
   });
@@ -47,14 +48,14 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { date, title, body } = await request.json();
+  const { date, title, body, tags } = await request.json();
 
   const { rows } = await pool.query(
     `UPDATE notes
-     SET date = $1, title = $2, body = $3, updated_at = now()
-     WHERE id = $4 AND user_id = $5
-     RETURNING id, date, title, body, created_at, updated_at`,
-    [date, title, body, id, session.user.id]
+     SET date = $1, title = $2, body = $3, tags = $4, updated_at = now()
+     WHERE id = $5 AND user_id = $6
+     RETURNING id, date, title, body, tags, created_at, updated_at`,
+    [date, title, body, tags ?? [], id, session.user.id]
   );
 
   if (rows.length === 0) {
@@ -67,6 +68,7 @@ export async function PUT(
     date: r.date,
     title: r.title,
     body: r.body,
+    tags: r.tags ?? [],
     createdAt: new Date(r.created_at).getTime(),
     updatedAt: new Date(r.updated_at).getTime(),
   });

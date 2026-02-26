@@ -6,6 +6,8 @@ export const initialState: AppState = {
   selectedDate: todayISO(),
   selectedNoteId: null,
   editorMode: "view",
+  searchQuery: "",
+  filterTag: null,
 };
 
 export function notesReducer(state: AppState, action: AppAction): AppState {
@@ -19,14 +21,19 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         selectedDate: action.payload,
         selectedNoteId: null,
         editorMode: "view",
+        searchQuery: "",
+        filterTag: null,
       };
 
-    case "SELECT_NOTE":
+    case "SELECT_NOTE": {
+      const note = state.notes[action.payload];
       return {
         ...state,
         selectedNoteId: action.payload,
+        selectedDate: note ? note.date : state.selectedDate,
         editorMode: "view",
       };
+    }
 
     case "ENTER_EDIT_MODE":
       return { ...state, editorMode: "edit" };
@@ -39,7 +46,7 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
       };
 
     case "SAVE_NOTE": {
-      const { id, date, title, body } = action.payload;
+      const { id, date, title, body, tags } = action.payload;
       const existing = state.notes[id];
       const now = Date.now();
       const note: Note = {
@@ -47,6 +54,7 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         date,
         title,
         body,
+        tags,
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
       };
@@ -74,6 +82,22 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         ...state,
         editorMode: state.selectedNoteId ? "view" : "view",
         selectedNoteId: state.editorMode === "new" ? null : state.selectedNoteId,
+      };
+
+    case "SET_SEARCH_QUERY":
+      return {
+        ...state,
+        searchQuery: action.payload,
+        selectedNoteId: null,
+        editorMode: "view",
+      };
+
+    case "SET_FILTER_TAG":
+      return {
+        ...state,
+        filterTag: action.payload,
+        selectedNoteId: null,
+        editorMode: "view",
       };
 
     default:

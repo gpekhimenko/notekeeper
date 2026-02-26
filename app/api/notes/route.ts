@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   const { rows } = await pool.query(
-    `SELECT id, date, title, body, created_at, updated_at
+    `SELECT id, date, title, body, tags, created_at, updated_at
      FROM notes
      WHERE user_id = $1
      ORDER BY updated_at DESC`,
@@ -22,6 +22,7 @@ export async function GET() {
     date: r.date,
     title: r.title,
     body: r.body,
+    tags: r.tags ?? [],
     createdAt: new Date(r.created_at).getTime(),
     updatedAt: new Date(r.updated_at).getTime(),
   }));
@@ -36,13 +37,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, date, title, body } = await request.json();
+  const { id, date, title, body, tags } = await request.json();
 
   const { rows } = await pool.query(
-    `INSERT INTO notes (id, user_id, date, title, body)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, date, title, body, created_at, updated_at`,
-    [id, session.user.id, date, title, body]
+    `INSERT INTO notes (id, user_id, date, title, body, tags)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING id, date, title, body, tags, created_at, updated_at`,
+    [id, session.user.id, date, title, body, tags ?? []]
   );
 
   const r = rows[0];
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
     date: r.date,
     title: r.title,
     body: r.body,
+    tags: r.tags ?? [],
     createdAt: new Date(r.created_at).getTime(),
     updatedAt: new Date(r.updated_at).getTime(),
   }, { status: 201 });

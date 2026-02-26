@@ -9,6 +9,9 @@ interface CalendarSidebarProps {
   notes: NotesStore;
   onSelectDate: (date: string) => void;
   userEmail?: string;
+  allTags: string[];
+  filterTag: string | null;
+  onFilterTag: (tag: string | null) => void;
 }
 
 export default function CalendarSidebar({
@@ -16,6 +19,9 @@ export default function CalendarSidebar({
   notes,
   onSelectDate,
   userEmail,
+  allTags,
+  filterTag,
+  onFilterTag,
 }: CalendarSidebarProps) {
   const selected = new Date(selectedDate + "T00:00:00");
 
@@ -69,6 +75,42 @@ export default function CalendarSidebar({
             disabled: "opacity-20 cursor-not-allowed",
           }}
         />
+
+        {/* Tag filter section */}
+        {allTags.length > 0 && (
+          <div className="mt-4 px-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                Tags
+              </span>
+              {filterTag && (
+                <button
+                  onClick={() => onFilterTag(null)}
+                  className="text-[10px] text-zinc-400 hover:text-zinc-700 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() =>
+                    onFilterTag(filterTag === tag ? null : tag)
+                  }
+                  className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                    filterTag === tag
+                      ? "bg-blue-600 text-white"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <style>{`
         .has-notes::after {

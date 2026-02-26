@@ -40,9 +40,31 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [status]);
 
-  const notesForDate = Object.values(state.notes)
-    .filter((n) => n.date === state.selectedDate)
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+  // Compute all unique tags across all notes
+  const allTags = Array.from(
+    new Set(Object.values(state.notes).flatMap((n) => n.tags))
+  ).sort();
+
+  // Flexible filtering: search query > tag filter > date filter
+  const allNotes = Object.values(state.notes);
+  const isSearching = state.searchQuery.trim().length > 0;
+  const isFilteringByTag = state.filterTag !== null;
+
+  let filteredNotes: Note[];
+  if (isSearching) {
+    const q = state.searchQuery.toLowerCase();
+    filteredNotes = allNotes.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) ||
+        n.body.toLowerCase().includes(q) ||
+        n.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  } else if (isFilteringByTag) {
+    filteredNotes = allNotes.filter((n) => n.tags.includes(state.filterTag!));
+  } else {
+    filteredNotes = allNotes.filter((n) => n.date === state.selectedDate);
+  }
+  filteredNotes.sort((a, b) => b.updatedAt - a.updatedAt);
 
   const selectedNote = state.selectedNoteId
     ? (state.notes[state.selectedNoteId] ?? null)
@@ -56,7 +78,13 @@ export default function Home() {
         : await updateNote(payload);
       dispatch({
         type: "SAVE_NOTE",
-        payload: { id: saved.id, date: saved.date, title: saved.title, body: saved.body },
+        payload: {
+          id: saved.id,
+          date: saved.date,
+          title: saved.title,
+          body: saved.body,
+          tags: saved.tags,
+        },
       });
     } catch (err) {
       console.error(err);
@@ -92,15 +120,23 @@ export default function Home() {
         notes={state.notes}
         onSelectDate={(date) => dispatch({ type: "SELECT_DATE", payload: date })}
         userEmail={session?.user?.email ?? undefined}
+        allTags={allTags}
+        filterTag={state.filterTag}
+        onFilterTag={(tag) => dispatch({ type: "SET_FILTER_TAG", payload: tag })}
       />
 
       <main className="flex flex-1 overflow-hidden">
         <NotesList
           selectedDate={state.selectedDate}
-          notes={notesForDate}
+          notes={filteredNotes}
           selectedNoteId={state.selectedNoteId}
           onSelectNote={(id) => dispatch({ type: "SELECT_NOTE", payload: id })}
           onNewNote={() => dispatch({ type: "NEW_NOTE" })}
+          searchQuery={state.searchQuery}
+          onSearchChange={(q) => dispatch({ type: "SET_SEARCH_QUERY", payload: q })}
+          isSearching={isSearching}
+          isFilteringByTag={isFilteringByTag}
+          filterTag={state.filterTag}
         />
 
         {showEditor ? (
