@@ -32,6 +32,7 @@ A personal note-taking app with calendar organization, markdown support, tags, v
 - Node.js 18+
 - A Supabase Postgres database (or any Postgres instance)
 - A GitHub OAuth app and/or Google OAuth app (for authentication)
+  - For Google OAuth, add `https://<your-domain>/api/auth/callback/google` as an authorized redirect URI in Google Cloud Console
 - A Groq API key (for AI suggestions)
 
 ### 1. Install dependencies
