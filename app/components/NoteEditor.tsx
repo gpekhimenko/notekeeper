@@ -16,6 +16,7 @@ interface NoteEditorProps {
   onDelete: (id: string) => void;
   onEnterEdit: () => void;
   onCancel: () => void;
+  onBack?: () => void;
 }
 
 export default function NoteEditor({
@@ -26,6 +27,7 @@ export default function NoteEditor({
   onDelete,
   onEnterEdit,
   onCancel,
+  onBack,
 }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -104,12 +106,25 @@ export default function NoteEditor({
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 min-h-[52px]">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-zinc-200 min-h-[52px]">
         {isEditing ? (
           <>
-            <span className="text-xs text-zinc-400">
-              {editorMode === "new" ? "New note" : "Editing"}
-            </span>
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="md:hidden text-zinc-500 hover:text-zinc-800 transition-colors p-1"
+                  aria-label="Back to list"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              <span className="text-xs text-zinc-400">
+                {editorMode === "new" ? "New note" : "Editing"}
+              </span>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleCancel}
@@ -128,9 +143,22 @@ export default function NoteEditor({
           </>
         ) : note ? (
           <>
-            <span className="text-xs text-zinc-400">
-              {new Date(note.updatedAt).toLocaleString()}
-            </span>
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="md:hidden text-zinc-500 hover:text-zinc-800 transition-colors p-1"
+                  aria-label="Back to list"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              <span className="text-xs text-zinc-400">
+                {new Date(note.updatedAt).toLocaleString()}
+              </span>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleDelete}
@@ -150,7 +178,7 @@ export default function NoteEditor({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-6 py-4 overflow-y-auto thin-scrollbar">
+      <div className="flex-1 flex flex-col px-4 md:px-6 py-4 overflow-y-auto thin-scrollbar">
         {isEditing ? (
           <>
             <input

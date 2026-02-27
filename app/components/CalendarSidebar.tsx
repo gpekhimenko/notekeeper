@@ -13,6 +13,7 @@ interface CalendarSidebarProps {
   allTags: string[];
   filterTags: string[];
   onFilterTag: (tag: string) => void;
+  onBack?: () => void;
 }
 
 export default function CalendarSidebar({
@@ -23,6 +24,7 @@ export default function CalendarSidebar({
   allTags,
   filterTags,
   onFilterTag,
+  onBack,
 }: CalendarSidebarProps) {
   const selected = new Date(selectedDate + "T00:00:00");
 
@@ -37,11 +39,22 @@ export default function CalendarSidebar({
   }
 
   return (
-    <aside className="w-72 border-r border-zinc-200 bg-white flex flex-col">
-      <div className="px-4 py-5 border-b border-zinc-200">
+    <aside className="w-full md:w-72 border-r border-zinc-200 bg-white flex flex-col">
+      <div className="px-4 py-5 border-b border-zinc-200 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-zinc-800 tracking-tight">
           Notekeeper
         </h1>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="md:hidden text-zinc-500 hover:text-zinc-800 transition-colors p-1"
+            aria-label="Close calendar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-auto px-2 py-4">
         <DayPicker

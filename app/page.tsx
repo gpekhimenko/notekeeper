@@ -4,7 +4,7 @@ import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { notesReducer, initialState } from "./lib/useNotesReducer";
-import { Note, NotesStore } from "./lib/types";
+import { Note, NotesStore, MobilePanel } from "./lib/types";
 import { fetchNotes, createNote, updateNote, deleteNote } from "./lib/notesApi";
 import CalendarSidebar from "./components/CalendarSidebar";
 import NotesList from "./components/NotesList";
@@ -16,6 +16,7 @@ export default function Home() {
   const router = useRouter();
   const [state, dispatch] = useReducer(notesReducer, initialState);
   const [loading, setLoading] = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel>("list");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -97,6 +98,7 @@ export default function Home() {
     try {
       await deleteNote(id);
       dispatch({ type: "DELETE_NOTE", payload: id });
+      setMobilePanel("list");
     } catch (err) {
       console.error(err);
     }
@@ -117,52 +119,73 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      <CalendarSidebar
-        selectedDate={state.selectedDate}
-        notes={state.notes}
-        onSelectDate={(date) => dispatch({ type: "SELECT_DATE", payload: date })}
-        userEmail={session?.user?.email ?? undefined}
-        allTags={allTags}
-        filterTags={state.filterTags}
-        onFilterTag={(tag) => {
-          if (!tag) {
-            dispatch({ type: "SET_FILTER_TAGS", payload: [] });
-            return;
-          }
-          const newTags = state.filterTags.includes(tag)
-            ? state.filterTags.filter((t) => t !== tag)
-            : [...state.filterTags, tag];
-          dispatch({ type: "SET_FILTER_TAGS", payload: newTags });
-        }}
-      />
+      <div className={`${mobilePanel === "calendar" ? "flex" : "hidden"} md:flex w-full md:w-auto`}>
+        <CalendarSidebar
+          selectedDate={state.selectedDate}
+          notes={state.notes}
+          onSelectDate={(date) => {
+            dispatch({ type: "SELECT_DATE", payload: date });
+            setMobilePanel("list");
+          }}
+          userEmail={session?.user?.email ?? undefined}
+          allTags={allTags}
+          filterTags={state.filterTags}
+          onFilterTag={(tag) => {
+            if (!tag) {
+              dispatch({ type: "SET_FILTER_TAGS", payload: [] });
+              return;
+            }
+            const newTags = state.filterTags.includes(tag)
+              ? state.filterTags.filter((t) => t !== tag)
+              : [...state.filterTags, tag];
+            dispatch({ type: "SET_FILTER_TAGS", payload: newTags });
+          }}
+          onBack={() => setMobilePanel("list")}
+        />
+      </div>
 
       <main className="flex flex-1 overflow-hidden">
-        <NotesList
-          selectedDate={state.selectedDate}
-          notes={filteredNotes}
-          selectedNoteId={state.selectedNoteId}
-          onSelectNote={(id) => dispatch({ type: "SELECT_NOTE", payload: id })}
-          onNewNote={() => dispatch({ type: "NEW_NOTE" })}
-          searchQuery={state.searchQuery}
-          onSearchChange={(q) => dispatch({ type: "SET_SEARCH_QUERY", payload: q })}
-          isSearching={isSearching}
-          isFilteringByTag={isFilteringByTag}
-          filterTags={state.filterTags}
-        />
-
-        {showEditor ? (
-          <NoteEditor
-            note={selectedNote}
-            editorMode={state.editorMode}
+        <div className={`${mobilePanel === "list" ? "flex" : "hidden"} md:flex w-full md:w-auto`}>
+          <NotesList
             selectedDate={state.selectedDate}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onEnterEdit={() => dispatch({ type: "ENTER_EDIT_MODE" })}
-            onCancel={() => dispatch({ type: "CANCEL_EDIT" })}
+            notes={filteredNotes}
+            selectedNoteId={state.selectedNoteId}
+            onSelectNote={(id) => {
+              dispatch({ type: "SELECT_NOTE", payload: id });
+              setMobilePanel("editor");
+            }}
+            onNewNote={() => {
+              dispatch({ type: "NEW_NOTE" });
+              setMobilePanel("editor");
+            }}
+            searchQuery={state.searchQuery}
+            onSearchChange={(q) => dispatch({ type: "SET_SEARCH_QUERY", payload: q })}
+            isSearching={isSearching}
+            isFilteringByTag={isFilteringByTag}
+            filterTags={state.filterTags}
+            onShowCalendar={() => setMobilePanel("calendar")}
           />
-        ) : (
-          <EmptyState />
-        )}
+        </div>
+
+        <div className={`${mobilePanel === "editor" ? "flex" : "hidden"} md:flex flex-1`}>
+          {showEditor ? (
+            <NoteEditor
+              note={selectedNote}
+              editorMode={state.editorMode}
+              selectedDate={state.selectedDate}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              onEnterEdit={() => dispatch({ type: "ENTER_EDIT_MODE" })}
+              onCancel={() => {
+                dispatch({ type: "CANCEL_EDIT" });
+                setMobilePanel("list");
+              }}
+              onBack={() => setMobilePanel("list")}
+            />
+          ) : (
+            <EmptyState />
+          )}
+        </div>
       </main>
     </div>
   );

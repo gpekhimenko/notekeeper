@@ -19,6 +19,8 @@ export interface AppState {
   filterTags: string[];
 }
 
+export type MobilePanel = "calendar" | "list" | "editor";
+
 export type AppAction =
   | { type: "LOAD_NOTES"; payload: NotesStore }
   | { type: "SELECT_DATE"; payload: string }
