@@ -7,6 +7,7 @@ import { generateNoteId } from "../lib/noteUtils";
 import { getTagColor } from "../lib/tagColors";
 import { useSpeechRecognition } from "../lib/useSpeechRecognition";
 import { autocorrectText } from "../lib/notesApi";
+import { useTitleSuggestion } from "../lib/useTitleSuggestion";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -35,6 +36,7 @@ export default function NoteEditor({
   const [tagInput, setTagInput] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
   const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
+  const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(body, title);
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 
@@ -242,9 +244,28 @@ export default function NoteEditor({
               placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-2xl font-semibold text-zinc-800 placeholder-zinc-300 outline-none mb-4 border-b border-zinc-100 pb-2"
+              className="w-full text-2xl font-semibold text-zinc-800 placeholder-zinc-300 outline-none mb-1 border-b border-zinc-100 pb-2"
               autoFocus
             />
+            <div className="mb-3 h-5">
+              {isSuggestingTitle && (
+                <span className="text-xs text-zinc-400 italic animate-pulse">
+                  Suggesting title...
+                </span>
+              )}
+              {!isSuggestingTitle && suggestion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTitle(suggestion);
+                    clearSuggestion();
+                  }}
+                  className="text-xs text-zinc-400 italic hover:text-zinc-600 transition-colors cursor-pointer"
+                >
+                  {suggestion}
+                </button>
+              )}
+            </div>
             <textarea
               placeholder="Write your note… (supports Markdown)"
               value={body}

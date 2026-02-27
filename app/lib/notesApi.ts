@@ -33,6 +33,25 @@ export async function deleteNote(id: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete note");
 }
 
+export async function suggestTitle(
+  body: string,
+  signal?: AbortSignal
+): Promise<string> {
+  try {
+    const res = await fetch("/api/suggest-title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+      signal,
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.title ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export async function autocorrectText(text: string): Promise<string> {
   try {
     const res = await fetch("/api/autocorrect", {
