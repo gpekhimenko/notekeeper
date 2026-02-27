@@ -103,14 +103,18 @@ export default function NoteEditor({
     }
   }
 
+  function addTagFromInput() {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && !tags.includes(tag)) {
+      setTags([...tags, tag]);
+    }
+    setTagInput("");
+  }
+
   function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
-      const tag = tagInput.trim().toLowerCase();
-      if (tag && !tags.includes(tag)) {
-        setTags([...tags, tag]);
-      }
-      setTagInput("");
+      addTagFromInput();
     }
   }
 
@@ -291,14 +295,25 @@ export default function NoteEditor({
                   );
                 })}
               </div>
-              <input
-                type="text"
-                placeholder="Add tag and press Enter…"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                className="text-sm text-zinc-700 placeholder-zinc-300 outline-none border border-zinc-200 rounded px-2 py-1 w-48"
-              />
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Add tag and press Enter…"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  className="text-sm text-zinc-700 placeholder-zinc-300 outline-none border border-zinc-200 rounded px-2 py-1 w-48"
+                />
+                {tagInput.trim() && (
+                  <button
+                    type="button"
+                    onClick={addTagFromInput}
+                    className="text-xs text-white bg-zinc-500 hover:bg-zinc-600 px-2 py-1 rounded transition-colors"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
               {isSuggestingTags && (
                 <span className="block mt-1.5 text-xs text-zinc-400 italic animate-pulse">
                   Suggesting tags...
