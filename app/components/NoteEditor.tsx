@@ -36,6 +36,23 @@ export default function NoteEditor({
   const [isCorrecting, setIsCorrecting] = useState(false);
   const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
   const bodyPrefixRef = useRef("");
+  const wasListeningRef = useRef(false);
+
+  // Auto-run autocorrect when listening stops (covers both manual stop and mobile auto-stop)
+  useEffect(() => {
+    if (wasListeningRef.current && !isListening) {
+      const prefix = bodyPrefixRef.current;
+      const dictated = body.slice(prefix.length).trim();
+      if (dictated) {
+        setIsCorrecting(true);
+        autocorrectText(dictated).then((corrected) => {
+          setBody(prefix ? prefix + " " + corrected : corrected);
+          setIsCorrecting(false);
+        });
+      }
+    }
+    wasListeningRef.current = isListening;
+  }, [isListening]);
 
   // Reset draft when note or mode changes
   useEffect(() => {
@@ -127,15 +144,6 @@ export default function NoteEditor({
                   onClick={() => {
                     if (isListening) {
                       stopListening();
-                      const prefix = bodyPrefixRef.current;
-                      const dictated = body.slice(prefix.length).trim();
-                      if (dictated) {
-                        setIsCorrecting(true);
-                        autocorrectText(dictated).then((corrected) => {
-                          setBody(prefix ? prefix + " " + corrected : corrected);
-                          setIsCorrecting(false);
-                        });
-                      }
                     } else {
                       bodyPrefixRef.current = body;
                       startListening();
