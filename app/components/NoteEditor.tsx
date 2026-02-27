@@ -119,7 +119,61 @@ export default function NoteEditor({
                 {editorMode === "new" ? "New note" : "Editing"}
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              {isSupported && (
+                <button
+                  type="button"
+                  disabled={isCorrecting}
+                  onClick={() => {
+                    if (isListening) {
+                      stopListening();
+                      const prefix = bodyPrefixRef.current;
+                      const dictated = body.slice(prefix.length).trim();
+                      if (dictated) {
+                        setIsCorrecting(true);
+                        autocorrectText(dictated).then((corrected) => {
+                          setBody(prefix ? prefix + " " + corrected : corrected);
+                          setIsCorrecting(false);
+                        });
+                      }
+                    } else {
+                      bodyPrefixRef.current = body;
+                      startListening();
+                    }
+                  }}
+                  title={isListening ? "Stop dictation" : "Start voice dictation"}
+                  className={`inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded border transition-colors ${
+                    isListening
+                      ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+                      : "border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700"
+                  }`}
+                >
+                  {isListening && (
+                    <span
+                      className="inline-block w-2 h-2 rounded-full bg-red-500"
+                      style={{ animation: "pulse-dot 1.2s ease-in-out infinite" }}
+                    />
+                  )}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-4 h-4"
+                  >
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                  {isListening ? "Listening…" : "Dictate"}
+                </button>
+              )}
+              {isCorrecting && (
+                <span className="text-xs text-blue-500 animate-pulse">Correcting…</span>
+              )}
               <button
                 onClick={handleCancel}
                 className="text-sm text-zinc-500 hover:text-zinc-800 px-3 py-1.5 rounded border border-zinc-200 hover:border-zinc-400 transition-colors"
@@ -189,65 +243,6 @@ export default function NoteEditor({
               onChange={(e) => setBody(e.target.value)}
               className="flex-1 w-full text-sm text-zinc-700 placeholder-zinc-300 outline-none resize-none leading-relaxed min-h-[300px] font-mono"
             />
-
-            {/* Voice dictation */}
-            {isSupported && (
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  type="button"
-                  disabled={isCorrecting}
-                  onClick={() => {
-                    if (isListening) {
-                      stopListening();
-                      // Run autocorrect on the dictated portion
-                      const prefix = bodyPrefixRef.current;
-                      const dictated = body.slice(prefix.length).trim();
-                      if (dictated) {
-                        setIsCorrecting(true);
-                        autocorrectText(dictated).then((corrected) => {
-                          setBody(prefix ? prefix + " " + corrected : corrected);
-                          setIsCorrecting(false);
-                        });
-                      }
-                    } else {
-                      bodyPrefixRef.current = body;
-                      startListening();
-                    }
-                  }}
-                  title={isListening ? "Stop dictation" : "Start voice dictation"}
-                  className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded border transition-colors ${
-                    isListening
-                      ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
-                      : "border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700"
-                  }`}
-                >
-                  {isListening && (
-                    <span
-                      className="inline-block w-2 h-2 rounded-full bg-red-500"
-                      style={{ animation: "pulse-dot 1.2s ease-in-out infinite" }}
-                    />
-                  )}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-3.5 h-3.5"
-                  >
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" x2="12" y1="19" y2="22" />
-                  </svg>
-                  {isListening ? "Listening…" : "Dictate"}
-                </button>
-                {isCorrecting && (
-                  <span className="text-xs text-blue-500 animate-pulse">Correcting…</span>
-                )}
-              </div>
-            )}
 
             {/* Tag editing */}
             <div className="mt-4 pt-4 border-t border-zinc-100">
