@@ -42,16 +42,8 @@ export default function NoteEditor({
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 
-  // Freeze body for suggestion hooks while dictating/correcting to prevent flashing
-  const [stableBody, setStableBody] = useState("");
-  useEffect(() => {
-    if (!isListening && !isCorrecting) {
-      setStableBody(body);
-    }
-  }, [body, isListening, isCorrecting]);
-
-  const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(stableBody, title);
-  const { suggestions: tagSuggestions, isLoading: isSuggestingTags } = useTagSuggestion(stableBody, tags, allTags);
+  const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(body, title);
+  const { suggestions: tagSuggestions, isLoading: isSuggestingTags } = useTagSuggestion(body, tags, allTags);
 
   // Auto-run autocorrect when listening stops (covers both manual stop and mobile auto-stop)
   useEffect(() => {
