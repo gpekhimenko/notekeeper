@@ -32,3 +32,18 @@ export async function deleteNote(id: string): Promise<void> {
   const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete note");
 }
+
+export async function autocorrectText(text: string): Promise<string> {
+  try {
+    const res = await fetch("/api/autocorrect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) return text;
+    const data = await res.json();
+    return data.corrected ?? text;
+  } catch {
+    return text;
+  }
+}

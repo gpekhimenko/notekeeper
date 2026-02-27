@@ -6,6 +6,7 @@ import { Note } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
 import { getTagColor } from "../lib/tagColors";
 import { useSpeechRecognition } from "../lib/useSpeechRecognition";
+import { autocorrectText } from "../lib/notesApi";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -30,8 +31,10 @@ export default function NoteEditor({
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [isCorrecting, setIsCorrecting] = useState(false);
   const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
   const prevTranscriptRef = useRef("");
+  const bodyBeforeDictationRef = useRef(0);
 
   // Reset draft when note or mode changes
   useEffect(() => {
@@ -116,7 +119,8 @@ export default function NoteEditor({
               </button>
               <button
                 onClick={handleSave}
-                className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded transition-colors"
+                disabled={isCorrecting}
+                className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save
               </button>
@@ -169,7 +173,27 @@ export default function NoteEditor({
               <div className="flex items-center gap-2 mt-2">
                 <button
                   type="button"
-                  onClick={isListening ? stopListening : startListening}
+                  disabled={isCorrecting}
+                  onClick={() => {
+                    if (isListening) {
+                      stopListening();
+                      // Run autocorrect on the dictated portion
+                      const dictated = body.slice(bodyBeforeDictationRef.current).trim();
+                      if (dictated) {
+                        setIsCorrecting(true);
+                        autocorrectText(dictated).then((corrected) => {
+                          setBody((prev) => {
+                            const prefix = prev.slice(0, bodyBeforeDictationRef.current);
+                            return prefix ? prefix + " " + corrected : corrected;
+                          });
+                          setIsCorrecting(false);
+                        });
+                      }
+                    } else {
+                      bodyBeforeDictationRef.current = body.length;
+                      startListening();
+                    }
+                  }}
                   title={isListening ? "Stop dictation" : "Start voice dictation"}
                   className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded border transition-colors ${
                     isListening
@@ -199,6 +223,9 @@ export default function NoteEditor({
                   </svg>
                   {isListening ? "Listening…" : "Dictate"}
                 </button>
+                {isCorrecting && (
+                  <span className="text-xs text-blue-500 animate-pulse">Correcting…</span>
+                )}
               </div>
             )}
 
