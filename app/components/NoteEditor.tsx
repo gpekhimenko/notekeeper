@@ -191,6 +191,7 @@ export default function NoteEditor({
                       }
                     } else {
                       bodyBeforeDictationRef.current = body.length;
+                      prevTranscriptRef.current = "";
                       startListening();
                     }
                   }}
