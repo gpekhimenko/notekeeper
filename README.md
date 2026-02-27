@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NoteKeeper
+
+A personal note-taking app with calendar organization, markdown support, tags, voice dictation, and AI-powered suggestions.
+
+**Live:** https://gp-notetaker.vercel.app
+
+## Features
+
+- **Calendar sidebar** — browse and create notes by date
+- **Markdown editor** — write notes with full Markdown support, rendered in view mode
+- **Tags** — colored tag pills with hash-based 8-color palette, multi-tag AND filtering
+- **Search** — full-text search across titles, bodies, and tags
+- **Voice dictation** — speech-to-text with automatic autocorrect (Web Speech API)
+- **AI title suggestion** — auto-suggests a title based on note body (Groq LLM, 1s debounce)
+- **AI tag suggestions** — suggests 2-4 tags preferring existing tags for consistency (Groq LLM, 1.5s debounce)
+- **Auth** — GitHub OAuth via NextAuth.js v5
+- **Mobile-friendly** — responsive layout with panel navigation, tap-friendly controls
+
+## Tech Stack
+
+- **Framework:** Next.js 16, React 19, TypeScript
+- **Styling:** Tailwind CSS 4
+- **Auth:** NextAuth.js v5 (beta.30) with GitHub OAuth
+- **Database:** Supabase Postgres (via `pg` + `@auth/pg-adapter`)
+- **AI:** Groq API with `openai/gpt-oss-20b` model
+- **Other:** react-day-picker, react-markdown
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- A Supabase Postgres database (or any Postgres instance)
+- A GitHub OAuth app (for authentication)
+- A Groq API key (for AI suggestions)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up the database
+
+Run the schema against your Postgres database:
+
+```bash
+psql $DATABASE_URL -f schema.sql
+```
+
+### 3. Configure environment variables
+
+Create `.env.local` with:
+
+```
+AUTH_SECRET=<random-secret>
+AUTH_TRUST_HOST=true
+AUTH_GITHUB_ID=<github-oauth-client-id>
+AUTH_GITHUB_SECRET=<github-oauth-client-secret>
+DATABASE_URL=<postgres-connection-string>
+GROQ_API_KEY=<groq-api-key>
+```
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  page.tsx                    # Main app (state management, layout)
+  login/page.tsx              # Login page
+  api/
+    auth/[...nextauth]/       # NextAuth route handler
+    notes/                    # CRUD endpoints for notes
+    autocorrect/              # Voice dictation autocorrect
+    suggest-title/            # AI title suggestion
+    suggest-tags/             # AI tag suggestion
+  components/
+    CalendarSidebar.tsx       # Date picker + tag filter
+    NotesList.tsx             # Notes list with search
+    NoteEditor.tsx            # View/edit/create notes
+    EmptyState.tsx            # Empty state placeholder
+  lib/
+    db.ts                     # Postgres connection pool
+    types.ts                  # TypeScript types
+    notesApi.ts               # Client-side API functions
+    useNotesReducer.ts        # State management (useReducer)
+    useTitleSuggestion.ts     # AI title suggestion hook
+    useTagSuggestion.ts       # AI tag suggestion hook
+    useSpeechRecognition.ts   # Voice dictation hook
+    noteUtils.ts              # ID generation utilities
+    tagColors.ts              # Tag color palette
+auth.ts                       # NextAuth configuration
+schema.sql                    # Database schema
+```
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deployed on Vercel. Push to `master` triggers automatic deployment.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set the same environment variables listed above in Vercel project settings.
