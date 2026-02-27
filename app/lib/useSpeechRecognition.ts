@@ -46,19 +46,24 @@ export function useSpeechRecognition() {
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
-    let finalTranscript = "";
+    // committedPrefix: text from previous recognition sessions (after auto-restart)
+    // sessionFinals: rebuilt from all final results in the current session each time
+    let committedPrefix = "";
+    let sessionFinals = "";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      // Rebuild from ALL results each time to avoid double-counting
+      // (on mobile, resultIndex can be 0 on every event)
+      sessionFinals = "";
       let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          sessionFinals += event.results[i][0].transcript;
         } else {
-          interim += result[0].transcript;
+          interim += event.results[i][0].transcript;
         }
       }
-      setTranscript(finalTranscript + interim);
+      setTranscript(committedPrefix + sessionFinals + interim);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -73,6 +78,8 @@ export function useSpeechRecognition() {
       // Browser may stop on its own (silence timeout, etc.)
       // Restart if we're still supposed to be listening
       if (shouldListenRef.current) {
+        committedPrefix += sessionFinals;
+        sessionFinals = "";
         try {
           recognition.start();
         } catch {
