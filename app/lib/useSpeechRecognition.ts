@@ -35,7 +35,8 @@ export function useSpeechRecognition() {
     const Ctor = getRecognitionConstructor();
     if (!Ctor) return;
 
-    sessionFinalsRef.current = "";
+    // Track finals committed in this session to avoid re-counting
+    const committedFinals: string[] = [];
 
     const recognition = new Ctor();
     recognition.interimResults = true;
@@ -43,15 +44,16 @@ export function useSpeechRecognition() {
     recognition.lang = "en-US";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let sessionFinals = "";
       let interim = "";
-      for (let i = 0; i < event.results.length; i++) {
+      // Only process result indices we haven't committed yet
+      for (let i = committedFinals.length; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          sessionFinals += event.results[i][0].transcript;
+          committedFinals.push(event.results[i][0].transcript);
         } else {
           interim += event.results[i][0].transcript;
         }
       }
+      const sessionFinals = committedFinals.join("");
       sessionFinalsRef.current = sessionFinals;
       setTranscript(accumulatedFinalsRef.current + sessionFinals + interim);
     };
