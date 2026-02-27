@@ -74,13 +74,16 @@ export function useSpeechRecognition() {
       sessionFinalsRef.current = "";
 
       if (shouldListenRef.current) {
-        if (!mobile) {
-          // Desktop: auto-restart with continuous mode as fallback
+        if (mobile) {
+          // Mobile: restart after a short delay to let the browser
+          // clean up the previous session. Without continuous mode,
+          // each session captures one utterance cleanly — no overlap.
+          setTimeout(() => {
+            if (shouldListenRef.current) launchSession();
+          }, 250);
+        } else {
           launchSession();
         }
-        // Mobile: keep isListening true so button stays active,
-        // but don't restart (both continuous and restart cause
-        // word duplication on mobile). User taps button again to stop.
       } else {
         setIsListening(false);
       }
