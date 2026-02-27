@@ -16,7 +16,7 @@ export interface AppState {
   selectedNoteId: string | null;
   editorMode: "view" | "edit" | "new";
   searchQuery: string;
-  filterTag: string | null;
+  filterTags: string[];
 }
 
 export type AppAction =
@@ -29,4 +29,4 @@ export type AppAction =
   | { type: "DELETE_NOTE"; payload: string }
   | { type: "CANCEL_EDIT" }
   | { type: "SET_SEARCH_QUERY"; payload: string }
-  | { type: "SET_FILTER_TAG"; payload: string | null };
+  | { type: "SET_FILTER_TAGS"; payload: string[] };

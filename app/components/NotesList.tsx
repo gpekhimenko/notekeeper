@@ -2,6 +2,7 @@
 
 import { Note } from "../lib/types";
 import { formatDateDisplay, truncateBody } from "../lib/noteUtils";
+import { getTagColor } from "../lib/tagColors";
 
 interface NotesListProps {
   selectedDate: string;
@@ -13,7 +14,7 @@ interface NotesListProps {
   onSearchChange: (query: string) => void;
   isSearching: boolean;
   isFilteringByTag: boolean;
-  filterTag: string | null;
+  filterTags: string[];
 }
 
 export default function NotesList({
@@ -26,18 +27,18 @@ export default function NotesList({
   onSearchChange,
   isSearching,
   isFilteringByTag,
-  filterTag,
+  filterTags,
 }: NotesListProps) {
   const headerText = isSearching
     ? `Results for "${searchQuery}"`
     : isFilteringByTag
-      ? `Tagged: ${filterTag}`
+      ? `Tagged: ${filterTags.join(", ")}`
       : formatDateDisplay(selectedDate);
 
   const emptyText = isSearching
     ? "No matching notes"
     : isFilteringByTag
-      ? "No notes with this tag"
+      ? "No notes with these tags"
       : "No notes for this day";
 
   return (
@@ -99,14 +100,17 @@ export default function NotesList({
                   {/* Tag pills (max 3 + overflow) */}
                   {note.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {note.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                      {note.tags.slice(0, 3).map((tag) => {
+                        const color = getTagColor(tag);
+                        return (
+                          <span
+                            key={tag}
+                            className={`text-[10px] ${color.bg} ${color.text} px-1.5 py-0.5 rounded-full`}
+                          >
+                            {tag}
+                          </span>
+                        );
+                      })}
                       {note.tags.length > 3 && (
                         <span className="text-[10px] text-zinc-400">
                           +{note.tags.length - 3}

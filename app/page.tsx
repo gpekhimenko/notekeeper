@@ -48,7 +48,7 @@ export default function Home() {
   // Flexible filtering: search query > tag filter > date filter
   const allNotes = Object.values(state.notes);
   const isSearching = state.searchQuery.trim().length > 0;
-  const isFilteringByTag = state.filterTag !== null;
+  const isFilteringByTag = state.filterTags.length > 0;
 
   let filteredNotes: Note[];
   if (isSearching) {
@@ -60,7 +60,9 @@ export default function Home() {
         n.tags.some((t) => t.toLowerCase().includes(q))
     );
   } else if (isFilteringByTag) {
-    filteredNotes = allNotes.filter((n) => n.tags.includes(state.filterTag!));
+    filteredNotes = allNotes.filter((n) =>
+      state.filterTags.every((t) => n.tags.includes(t))
+    );
   } else {
     filteredNotes = allNotes.filter((n) => n.date === state.selectedDate);
   }
@@ -121,8 +123,17 @@ export default function Home() {
         onSelectDate={(date) => dispatch({ type: "SELECT_DATE", payload: date })}
         userEmail={session?.user?.email ?? undefined}
         allTags={allTags}
-        filterTag={state.filterTag}
-        onFilterTag={(tag) => dispatch({ type: "SET_FILTER_TAG", payload: tag })}
+        filterTags={state.filterTags}
+        onFilterTag={(tag) => {
+          if (!tag) {
+            dispatch({ type: "SET_FILTER_TAGS", payload: [] });
+            return;
+          }
+          const newTags = state.filterTags.includes(tag)
+            ? state.filterTags.filter((t) => t !== tag)
+            : [...state.filterTags, tag];
+          dispatch({ type: "SET_FILTER_TAGS", payload: newTags });
+        }}
       />
 
       <main className="flex flex-1 overflow-hidden">
@@ -136,7 +147,7 @@ export default function Home() {
           onSearchChange={(q) => dispatch({ type: "SET_SEARCH_QUERY", payload: q })}
           isSearching={isSearching}
           isFilteringByTag={isFilteringByTag}
-          filterTag={state.filterTag}
+          filterTags={state.filterTags}
         />
 
         {showEditor ? (

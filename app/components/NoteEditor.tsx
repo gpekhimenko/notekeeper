@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Note } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
+import { getTagColor } from "../lib/tagColors";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -143,20 +144,23 @@ export default function NoteEditor({
             {/* Tag editing */}
             <div className="mt-4 pt-4 border-t border-zinc-100">
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {tags.map((tag) => (
+                {tags.map((tag) => {
+                  const color = getTagColor(tag);
+                  return (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full"
+                    className={`inline-flex items-center gap-1 text-xs ${color.bg} ${color.text} px-2 py-0.5 rounded-full`}
                   >
                     {tag}
                     <button
                       onClick={() => removeTag(tag)}
-                      className="text-blue-400 hover:text-blue-700 leading-none"
+                      className="opacity-60 hover:opacity-100 leading-none"
                     >
                       &times;
                     </button>
                   </span>
-                ))}
+                  );
+                })}
               </div>
               <input
                 type="text"
@@ -175,14 +179,17 @@ export default function NoteEditor({
             </h2>
             {note.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {note.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {note.tags.map((tag) => {
+                  const color = getTagColor(tag);
+                  return (
+                    <span
+                      key={tag}
+                      className={`text-xs ${color.bg} ${color.text} px-2 py-0.5 rounded-full`}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
               </div>
             )}
             <div className="prose prose-sm max-w-none text-zinc-700 leading-relaxed">

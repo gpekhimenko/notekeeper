@@ -3,6 +3,7 @@
 import { DayPicker } from "react-day-picker";
 import { signOut } from "next-auth/react";
 import { NotesStore } from "../lib/types";
+import { getTagColor } from "../lib/tagColors";
 
 interface CalendarSidebarProps {
   selectedDate: string;
@@ -10,8 +11,8 @@ interface CalendarSidebarProps {
   onSelectDate: (date: string) => void;
   userEmail?: string;
   allTags: string[];
-  filterTag: string | null;
-  onFilterTag: (tag: string | null) => void;
+  filterTags: string[];
+  onFilterTag: (tag: string) => void;
 }
 
 export default function CalendarSidebar({
@@ -20,7 +21,7 @@ export default function CalendarSidebar({
   onSelectDate,
   userEmail,
   allTags,
-  filterTag,
+  filterTags,
   onFilterTag,
 }: CalendarSidebarProps) {
   const selected = new Date(selectedDate + "T00:00:00");
@@ -83,9 +84,9 @@ export default function CalendarSidebar({
               <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                 Tags
               </span>
-              {filterTag && (
+              {filterTags.length > 0 && (
                 <button
-                  onClick={() => onFilterTag(null)}
+                  onClick={() => onFilterTag("")}
                   className="text-[10px] text-zinc-400 hover:text-zinc-700 transition-colors"
                 >
                   Clear
@@ -93,21 +94,23 @@ export default function CalendarSidebar({
               )}
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() =>
-                    onFilterTag(filterTag === tag ? null : tag)
-                  }
-                  className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
-                    filterTag === tag
-                      ? "bg-blue-600 text-white"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
+              {allTags.map((tag) => {
+                const color = getTagColor(tag);
+                const isActive = filterTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => onFilterTag(tag)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                      isActive
+                        ? `${color.activeBg} ${color.activeText}`
+                        : `${color.bg} ${color.text} hover:opacity-80`
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

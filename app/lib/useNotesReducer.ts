@@ -7,7 +7,7 @@ export const initialState: AppState = {
   selectedNoteId: null,
   editorMode: "view",
   searchQuery: "",
-  filterTag: null,
+  filterTags: [],
 };
 
 export function notesReducer(state: AppState, action: AppAction): AppState {
@@ -22,7 +22,7 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         selectedNoteId: null,
         editorMode: "view",
         searchQuery: "",
-        filterTag: null,
+        filterTags: [],
       };
 
     case "SELECT_NOTE": {
@@ -92,10 +92,10 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         editorMode: "view",
       };
 
-    case "SET_FILTER_TAG":
+    case "SET_FILTER_TAGS":
       return {
         ...state,
-        filterTag: action.payload,
+        filterTags: action.payload,
         selectedNoteId: null,
         editorMode: "view",
       };
