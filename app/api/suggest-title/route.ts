@@ -35,7 +35,7 @@ async function suggestWithGroq(body: string): Promise<string> {
           content: body,
         },
       ],
-      max_tokens: 40,
+      max_tokens: 200,
       temperature: 0.3,
     }),
   });
