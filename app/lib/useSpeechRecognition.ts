@@ -74,11 +74,13 @@ export function useSpeechRecognition() {
       sessionFinalsRef.current = "";
 
       if (shouldListenRef.current) {
-        // Auto-restart to keep listening until user explicitly stops.
-        // On mobile, continuous mode is off so onend fires on silence;
-        // restart without continuous avoids the audio overlap that
-        // continuous + restart caused.
-        launchSession();
+        if (!mobile) {
+          // Desktop: auto-restart with continuous mode as fallback
+          launchSession();
+        }
+        // Mobile: keep isListening true so button stays active,
+        // but don't restart (both continuous and restart cause
+        // word duplication on mobile). User taps button again to stop.
       } else {
         setIsListening(false);
       }
