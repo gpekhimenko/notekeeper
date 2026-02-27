@@ -8,6 +8,7 @@ import { getTagColor } from "../lib/tagColors";
 import { useSpeechRecognition } from "../lib/useSpeechRecognition";
 import { autocorrectText } from "../lib/notesApi";
 import { useTitleSuggestion } from "../lib/useTitleSuggestion";
+import { useTagSuggestion } from "../lib/useTagSuggestion";
 
 interface NoteEditorProps {
   note: Note | null;
@@ -18,6 +19,7 @@ interface NoteEditorProps {
   onEnterEdit: () => void;
   onCancel: () => void;
   onBack?: () => void;
+  allTags?: string[];
 }
 
 export default function NoteEditor({
@@ -29,6 +31,7 @@ export default function NoteEditor({
   onEnterEdit,
   onCancel,
   onBack,
+  allTags = [],
 }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -37,6 +40,7 @@ export default function NoteEditor({
   const [isCorrecting, setIsCorrecting] = useState(false);
   const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
   const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(body, title);
+  const { suggestions: tagSuggestions, isLoading: isSuggestingTags } = useTagSuggestion(body, tags, allTags);
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 
@@ -266,15 +270,8 @@ export default function NoteEditor({
                 </button>
               )}
             </div>
-            <textarea
-              placeholder="Write your note… (supports Markdown)"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="flex-1 w-full text-sm text-zinc-700 placeholder-zinc-300 outline-none resize-none leading-relaxed min-h-[300px] font-mono"
-            />
-
             {/* Tag editing */}
-            <div className="mt-4 pt-4 border-t border-zinc-100">
+            <div className="mb-3">
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {tags.map((tag) => {
                   const color = getTagColor(tag);
@@ -302,7 +299,33 @@ export default function NoteEditor({
                 onKeyDown={handleTagKeyDown}
                 className="text-sm text-zinc-700 placeholder-zinc-300 outline-none border border-zinc-200 rounded px-2 py-1 w-48"
               />
+              {isSuggestingTags && (
+                <span className="block mt-1.5 text-xs text-zinc-400 italic animate-pulse">
+                  Suggesting tags...
+                </span>
+              )}
+              {!isSuggestingTags && tagSuggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {tagSuggestions.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setTags([...tags, tag])}
+                      className="text-xs text-zinc-500 border border-dashed border-zinc-300 hover:border-zinc-400 hover:text-zinc-700 px-2 py-0.5 rounded-full transition-colors"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <textarea
+              placeholder="Write your note… (supports Markdown)"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="flex-1 w-full text-sm text-zinc-700 placeholder-zinc-300 outline-none resize-none leading-relaxed min-h-[300px] font-mono"
+            />
           </>
         ) : note ? (
           <>

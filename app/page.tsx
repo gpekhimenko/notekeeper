@@ -181,6 +181,7 @@ export default function Home() {
                 setMobilePanel("list");
               }}
               onBack={() => setMobilePanel("list")}
+              allTags={allTags}
             />
           ) : (
             <EmptyState />

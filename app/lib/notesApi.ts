@@ -52,6 +52,26 @@ export async function suggestTitle(
   }
 }
 
+export async function suggestTags(
+  body: string,
+  existingTags: string[],
+  signal?: AbortSignal
+): Promise<string[]> {
+  try {
+    const res = await fetch("/api/suggest-tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body, existingTags }),
+      signal,
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.tags ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function autocorrectText(text: string): Promise<string> {
   try {
     const res = await fetch("/api/autocorrect", {
