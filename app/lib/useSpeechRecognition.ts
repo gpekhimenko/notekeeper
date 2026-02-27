@@ -35,25 +35,28 @@ export function useSpeechRecognition() {
     const Ctor = getRecognitionConstructor();
     if (!Ctor) return;
 
-    // Track finals committed in this session to avoid re-counting
-    const committedFinals: string[] = [];
+    sessionFinalsRef.current = "";
+    const mobile = isMobileRef.current;
 
     const recognition = new Ctor();
     recognition.interimResults = true;
-    recognition.continuous = true;
     recognition.lang = "en-US";
 
+    // Only use continuous mode on desktop — it causes word duplication on mobile
+    if (!mobile) {
+      recognition.continuous = true;
+    }
+
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let sessionFinals = "";
       let interim = "";
-      // Only process result indices we haven't committed yet
-      for (let i = committedFinals.length; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          committedFinals.push(event.results[i][0].transcript);
+          sessionFinals += event.results[i][0].transcript;
         } else {
           interim += event.results[i][0].transcript;
         }
       }
-      const sessionFinals = committedFinals.join("");
       sessionFinalsRef.current = sessionFinals;
       setTranscript(accumulatedFinalsRef.current + sessionFinals + interim);
     };
@@ -70,7 +73,7 @@ export function useSpeechRecognition() {
       accumulatedFinalsRef.current += sessionFinalsRef.current;
       sessionFinalsRef.current = "";
 
-      if (shouldListenRef.current && !isMobileRef.current) {
+      if (shouldListenRef.current && !mobile) {
         // Auto-restart on desktop only — mobile browsers duplicate audio on restart
         launchSession();
       } else {
