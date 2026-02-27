@@ -13,14 +13,14 @@ A personal note-taking app with calendar organization, markdown support, tags, v
 - **Voice dictation** — speech-to-text with automatic autocorrect (Web Speech API)
 - **AI title suggestion** — auto-suggests a title based on note body (Groq LLM, 1s debounce)
 - **AI tag suggestions** — suggests 2-4 tags preferring existing tags for consistency (Groq LLM, 1.5s debounce)
-- **Auth** — GitHub OAuth via NextAuth.js v5
+- **Auth** — GitHub and Google OAuth via NextAuth.js v5
 - **Mobile-friendly** — responsive layout with panel navigation, tap-friendly controls
 
 ## Tech Stack
 
 - **Framework:** Next.js 16, React 19, TypeScript
 - **Styling:** Tailwind CSS 4
-- **Auth:** NextAuth.js v5 (beta.30) with GitHub OAuth
+- **Auth:** NextAuth.js v5 (beta.30) with GitHub and Google OAuth
 - **Database:** Supabase Postgres (via `pg` + `@auth/pg-adapter`)
 - **AI:** Groq API with `openai/gpt-oss-20b` model
 - **Other:** react-day-picker, react-markdown
@@ -31,7 +31,7 @@ A personal note-taking app with calendar organization, markdown support, tags, v
 
 - Node.js 18+
 - A Supabase Postgres database (or any Postgres instance)
-- A GitHub OAuth app (for authentication)
+- A GitHub OAuth app and/or Google OAuth app (for authentication)
 - A Groq API key (for AI suggestions)
 
 ### 1. Install dependencies
@@ -57,6 +57,8 @@ AUTH_SECRET=<random-secret>
 AUTH_TRUST_HOST=true
 AUTH_GITHUB_ID=<github-oauth-client-id>
 AUTH_GITHUB_SECRET=<github-oauth-client-secret>
+AUTH_GOOGLE_ID=<google-oauth-client-id>
+AUTH_GOOGLE_SECRET=<google-oauth-client-secret>
 DATABASE_URL=<postgres-connection-string>
 GROQ_API_KEY=<groq-api-key>
 ```
