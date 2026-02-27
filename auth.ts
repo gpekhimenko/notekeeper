@@ -6,6 +6,7 @@ import { pool } from "./app/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PostgresAdapter(pool),
+  session: { strategy: "jwt" },
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
@@ -21,8 +22,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    session({ session, user }) {
-      session.user.id = user.id;
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.id as string;
       return session;
     },
   },

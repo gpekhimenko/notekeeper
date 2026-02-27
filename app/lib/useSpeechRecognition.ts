@@ -24,9 +24,11 @@ export function useSpeechRecognition() {
   const shouldListenRef = useRef(false);
   const accumulatedFinalsRef = useRef("");
   const sessionFinalsRef = useRef("");
+  const isMobileRef = useRef(false);
 
   useEffect(() => {
     setIsSupported(getRecognitionConstructor() !== null);
+    isMobileRef.current = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }, []);
 
   const launchSession = useCallback(() => {
@@ -66,10 +68,11 @@ export function useSpeechRecognition() {
       accumulatedFinalsRef.current += sessionFinalsRef.current;
       sessionFinalsRef.current = "";
 
-      if (shouldListenRef.current) {
-        // Auto-restart: keep listening until user explicitly stops
+      if (shouldListenRef.current && !isMobileRef.current) {
+        // Auto-restart on desktop only — mobile browsers duplicate audio on restart
         launchSession();
       } else {
+        shouldListenRef.current = false;
         setIsListening(false);
       }
     };
