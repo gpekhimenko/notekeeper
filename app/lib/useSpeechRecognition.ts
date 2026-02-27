@@ -73,11 +73,13 @@ export function useSpeechRecognition() {
       accumulatedFinalsRef.current += sessionFinalsRef.current;
       sessionFinalsRef.current = "";
 
-      if (shouldListenRef.current && !mobile) {
-        // Auto-restart on desktop only — mobile browsers duplicate audio on restart
+      if (shouldListenRef.current) {
+        // Auto-restart to keep listening until user explicitly stops.
+        // On mobile, continuous mode is off so onend fires on silence;
+        // restart without continuous avoids the audio overlap that
+        // continuous + restart caused.
         launchSession();
       } else {
-        shouldListenRef.current = false;
         setIsListening(false);
       }
     };
