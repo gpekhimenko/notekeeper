@@ -35,8 +35,7 @@ export default function NoteEditor({
   const [tagInput, setTagInput] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
   const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
-  const prevTranscriptRef = useRef("");
-  const bodyBeforeDictationRef = useRef(0);
+  const bodyPrefixRef = useRef("");
 
   // Reset draft when note or mode changes
   useEffect(() => {
@@ -52,22 +51,18 @@ export default function NoteEditor({
       setTagInput("");
     }
     stopListening();
-    prevTranscriptRef.current = "";
+    bodyPrefixRef.current = "";
   }, [note?.id, editorMode, stopListening]);
 
-  // Append new speech transcript to body
+  // Replace dictation portion of body with full transcript on every update
   useEffect(() => {
     if (!transcript) return;
-    const newText = transcript.slice(prevTranscriptRef.current.length);
-    if (newText) {
-      setBody((prev) => (prev ? prev + " " + newText : newText));
-      prevTranscriptRef.current = transcript;
-    }
+    const prefix = bodyPrefixRef.current;
+    setBody(prefix ? prefix + " " + transcript : transcript);
   }, [transcript]);
 
   function handleSave() {
     stopListening();
-    prevTranscriptRef.current = "";
     const id = editorMode === "new" ? generateNoteId() : note!.id;
     const date = editorMode === "new" ? selectedDate : note!.date;
     onSave({ id, date, title: title.trim(), body, tags });
@@ -75,7 +70,6 @@ export default function NoteEditor({
 
   function handleCancel() {
     stopListening();
-    prevTranscriptRef.current = "";
     onCancel();
   }
 
@@ -206,20 +200,17 @@ export default function NoteEditor({
                     if (isListening) {
                       stopListening();
                       // Run autocorrect on the dictated portion
-                      const dictated = body.slice(bodyBeforeDictationRef.current).trim();
+                      const prefix = bodyPrefixRef.current;
+                      const dictated = body.slice(prefix.length).trim();
                       if (dictated) {
                         setIsCorrecting(true);
                         autocorrectText(dictated).then((corrected) => {
-                          setBody((prev) => {
-                            const prefix = prev.slice(0, bodyBeforeDictationRef.current);
-                            return prefix ? prefix + " " + corrected : corrected;
-                          });
+                          setBody(prefix ? prefix + " " + corrected : corrected);
                           setIsCorrecting(false);
                         });
                       }
                     } else {
-                      bodyBeforeDictationRef.current = body.length;
-                      prevTranscriptRef.current = "";
+                      bodyPrefixRef.current = body;
                       startListening();
                     }
                   }}
