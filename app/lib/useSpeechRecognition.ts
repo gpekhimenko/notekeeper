@@ -22,9 +22,60 @@ export function useSpeechRecognition() {
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const shouldListenRef = useRef(false);
+  const accumulatedFinalsRef = useRef("");
+  const sessionFinalsRef = useRef("");
 
   useEffect(() => {
     setIsSupported(getRecognitionConstructor() !== null);
+  }, []);
+
+  const launchSession = useCallback(() => {
+    const Ctor = getRecognitionConstructor();
+    if (!Ctor) return;
+
+    sessionFinalsRef.current = "";
+
+    const recognition = new Ctor();
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let sessionFinals = "";
+      let interim = "";
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          sessionFinals += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      sessionFinalsRef.current = sessionFinals;
+      setTranscript(accumulatedFinalsRef.current + sessionFinals + interim);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (event.error === "aborted" || event.error === "no-speech") return;
+      console.error("Speech recognition error:", event.error);
+      shouldListenRef.current = false;
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      // Accumulate finals from this session
+      accumulatedFinalsRef.current += sessionFinalsRef.current;
+      sessionFinalsRef.current = "";
+
+      if (shouldListenRef.current) {
+        // Auto-restart: keep listening until user explicitly stops
+        launchSession();
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
   }, []);
 
   const stop = useCallback(() => {
@@ -35,50 +86,16 @@ export function useSpeechRecognition() {
   }, []);
 
   const start = useCallback(() => {
-    const Ctor = getRecognitionConstructor();
-    if (!Ctor) return;
-
-    // Stop any existing instance
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
 
-    const recognition = new Ctor();
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // Rebuild from ALL results each time to avoid double-counting
-      let finals = "";
-      let interim = "";
-      for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finals += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-      setTranscript(finals + interim);
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (event.error === "aborted") return;
-      console.error("Speech recognition error:", event.error);
-      shouldListenRef.current = false;
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      // Don't auto-restart — mobile browsers re-capture overlapping audio
-      // on restart, causing word duplication. User can tap Dictate again.
-      shouldListenRef.current = false;
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
+    accumulatedFinalsRef.current = "";
+    sessionFinalsRef.current = "";
     shouldListenRef.current = true;
     setIsListening(true);
     setTranscript("");
-    recognition.start();
-  }, []);
+    launchSession();
+  }, [launchSession]);
 
   return { isListening, isSupported, transcript, start, stop };
 }
