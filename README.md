@@ -10,10 +10,14 @@ A personal note-taking app with calendar organization, markdown support, tags, v
 - **Markdown editor** — write notes with full Markdown support, rendered in view mode
 - **Tags** — colored tag pills with hash-based 8-color palette, multi-tag AND filtering
 - **Search** — full-text search across titles, bodies, and tags
-- **Voice dictation** — speech-to-text with automatic autocorrect (Web Speech API)
-- **AI title suggestion** — auto-suggests a title based on note body (Groq LLM, 1s debounce)
-- **AI tag suggestions** — suggests 2-4 tags preferring existing tags for consistency (Groq LLM, 1.5s debounce)
-- **Auth** — GitHub and Google OAuth via NextAuth.js v5
+- **Voice dictation** — speech-to-text with automatic grammar correction (Web Speech API + LanguageTool)
+  - Desktop: continuous recording with auto-restart, spoken punctuation conversion ("period" → `.`, "comma" → `,`, etc.)
+  - Mobile: session-based recording with auto-restart between pauses, no word duplication
+  - Toggle behavior: press Dictate to start, press again to stop and auto-correct
+- **AI title suggestion** — auto-suggests a short title summarizing the note body (Groq LLM, 1s debounce)
+- **AI tag suggestions** — suggests tags from existing tags only for consistency (Groq LLM, 1.5s debounce)
+- **Auth** — GitHub and Google OAuth via NextAuth.js v5 with JWT sessions for multi-device support
+- **Multi-device** — JWT session strategy allows the same account to be used on multiple devices simultaneously
 - **Mobile-friendly** — responsive layout with panel navigation, tap-friendly controls
 
 ## Tech Stack
