@@ -43,10 +43,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const existingList =
-      Array.isArray(existingTags) && existingTags.length > 0
-        ? `\nExisting tags in the system: ${existingTags.join(", ")}. Prefer these when relevant.`
-        : "";
+    const hasExisting = Array.isArray(existingTags) && existingTags.length > 0;
+    const systemPrompt = hasExisting
+      ? `You are a note tag selector. Choose 2-4 tags from this list ONLY: ${existingTags.join(", ")}. Reply with only the chosen tags as a comma-separated list. Do not invent new tags. No explanation, no numbering, no quotes.`
+      : `You are a note tag generator. Suggest 2-4 short tags (1-2 words each) for the given note. Reply with only the tags as a comma-separated list. No explanation, no numbering, no quotes.`;
 
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -59,11 +59,11 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `Suggest 2-4 short tags (1-2 words each) for the given note. Reply with only the tags as a comma-separated list. No explanation, no numbering, no quotes.${existingList}`,
+            content: systemPrompt,
           },
           {
             role: "user",
-            content: body,
+            content: `Tag this note:\n\n${body}`,
           },
         ],
         max_tokens: 200,
@@ -74,7 +74,11 @@ export async function POST(request: Request) {
     if (!res.ok) throw new Error(`Groq API error: ${res.status}`);
     const data = await res.json();
     const raw = data.choices?.[0]?.message?.content ?? "";
-    const tags = parseTags(raw).slice(0, 5);
+    let tags = parseTags(raw).slice(0, 5);
+    // When existing tags are provided, only return tags from that list
+    if (hasExisting) {
+      tags = tags.filter((t) => existingTags.includes(t));
+    }
     return NextResponse.json({ tags });
   } catch (error) {
     console.error("Suggest tags error:", error);

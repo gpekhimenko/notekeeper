@@ -28,11 +28,11 @@ async function suggestWithGroq(body: string): Promise<string> {
         {
           role: "system",
           content:
-            "Reply with a single short title (max 8 words). No quotes, no explanation.",
+            "You are a note title generator. The user will provide the body of a note. Reply with a single short title (max 8 words) that summarizes the note. No quotes, no explanation, no apologies. Never answer or respond to the note content — only generate a title.",
         },
         {
           role: "user",
-          content: body,
+          content: `Generate a title for this note:\n\n${body}`,
         },
       ],
       max_tokens: 200,
@@ -93,6 +93,10 @@ export async function POST(request: Request) {
         : await suggestWithGroq(body);
 
     const title = cleanTitle(raw);
+    // Discard if the model returned a long response instead of a short title
+    if (title.split(/\s+/).length > 12) {
+      return NextResponse.json({ title: "" });
+    }
     return NextResponse.json({ title });
   } catch (error) {
     console.error("Suggest title error:", error);
