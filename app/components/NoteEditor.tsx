@@ -6,7 +6,7 @@ import { Note, UserSettings } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
 import { getTagColor } from "../lib/tagColors";
 import { useVoiceInput } from "../lib/useVoiceInput";
-import { autocorrectText } from "../lib/notesApi";
+import { autocorrectText, summarizeNote } from "../lib/notesApi";
 import { useTitleSuggestion } from "../lib/useTitleSuggestion";
 import { useTagSuggestion } from "../lib/useTagSuggestion";
 
@@ -40,6 +40,8 @@ export default function NoteEditor({
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
+  const [summary, setSummary] = useState("");
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const { isListening, isSupported, isTranscribing, transcript, start: startListening, stop: stopListening } = useVoiceInput(settings?.speechProvider);
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
@@ -78,6 +80,7 @@ export default function NoteEditor({
     }
     stopListening();
     bodyPrefixRef.current = "";
+    setSummary("");
   }, [note?.id, editorMode, stopListening]);
 
   // Replace dictation portion of body with full transcript on every update
@@ -123,6 +126,14 @@ export default function NoteEditor({
 
   function removeTag(tag: string) {
     setTags(tags.filter((t) => t !== tag));
+  }
+
+  async function handleSummarize() {
+    if (!note?.body) return;
+    setIsSummarizing(true);
+    const result = await summarizeNote(note.body, settings?.summaryModel);
+    setSummary(result);
+    setIsSummarizing(false);
   }
 
   const isEditing = editorMode === "edit" || editorMode === "new";
@@ -229,6 +240,13 @@ export default function NoteEditor({
               </span>
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={handleSummarize}
+                disabled={isSummarizing || !note.body}
+                className="text-sm text-amber-600 hover:text-amber-800 px-3 py-1.5 rounded border border-amber-200 hover:border-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSummarizing ? "Summarizing\u2026" : "Summarize"}
+              </button>
               <button
                 onClick={handleDelete}
                 className="text-sm text-red-500 hover:text-red-700 px-3 py-1.5 rounded border border-red-200 hover:border-red-400 transition-colors"
@@ -363,6 +381,21 @@ export default function NoteEditor({
                     </span>
                   );
                 })}
+              </div>
+            )}
+            {summary && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-medium text-xs uppercase tracking-wide">Summary</span>
+                  <button
+                    onClick={() => setSummary("")}
+                    className="text-amber-400 hover:text-amber-700 text-sm leading-none transition-colors"
+                    aria-label="Dismiss summary"
+                  >
+                    &#x2715;
+                  </button>
+                </div>
+                <p className="leading-relaxed">{summary}</p>
               </div>
             )}
             <div className="prose prose-sm max-w-none text-zinc-700 leading-relaxed">

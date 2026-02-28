@@ -111,6 +111,21 @@ export async function transcribeAudio(blob: Blob): Promise<string> {
   return data.text ?? "";
 }
 
+export async function summarizeNote(body: string, model?: string): Promise<string> {
+  try {
+    const res = await fetch("/api/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body, model }),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.summary ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export async function autocorrectText(
   text: string,
   provider?: string,

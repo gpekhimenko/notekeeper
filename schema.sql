@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
   autocorrect_language TEXT NOT NULL DEFAULT 'en-US',
   title_model TEXT NOT NULL DEFAULT 'groq/openai/gpt-oss-20b',
   tag_model TEXT NOT NULL DEFAULT 'groq/openai/gpt-oss-20b',
+  summary_model TEXT NOT NULL DEFAULT 'groq/openai/gpt-oss-20b',
   pinned_tags TEXT[] NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

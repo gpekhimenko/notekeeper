@@ -27,6 +27,7 @@ export interface UserSettings {
   autocorrectLanguage: string;
   titleModel: string;
   tagModel: string;
+  summaryModel: string;
   pinnedTags: string[];
 }
 
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autocorrectLanguage: "en-US",
   titleModel: "groq/openai/gpt-oss-20b",
   tagModel: "groq/openai/gpt-oss-20b",
+  summaryModel: "groq/openai/gpt-oss-20b",
   pinnedTags: [],
 };
 

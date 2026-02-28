@@ -129,6 +129,19 @@ export default function SettingsPanel({ settings, onSave, onClose }: SettingsPan
             </select>
           </section>
 
+          {/* AI Summarization */}
+          <section>
+            <h3 className="text-sm font-medium text-zinc-700 mb-2">AI Summarization</h3>
+            <select
+              value={draft.summaryModel}
+              onChange={(e) => update("summaryModel", e.target.value)}
+              className="w-full text-sm border border-zinc-200 rounded px-3 py-2 text-zinc-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="groq/openai/gpt-oss-20b">Groq GPT-OSS-20B</option>
+              <option value="huggingface/mistral-7b">HuggingFace Mistral 7B</option>
+            </select>
+          </section>
+
           {/* Popular Tags */}
           <section>
             <h3 className="text-sm font-medium text-zinc-700 mb-2">Popular Tags</h3>

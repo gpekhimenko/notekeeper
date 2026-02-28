@@ -10,7 +10,7 @@ export async function GET() {
 
   const { rows } = await pool.query(
     `SELECT speech_provider, autocorrect_provider, autocorrect_language,
-            title_model, tag_model, pinned_tags
+            title_model, tag_model, summary_model, pinned_tags
      FROM user_settings WHERE user_id = $1`,
     [session.user.id]
   );
@@ -22,6 +22,7 @@ export async function GET() {
       autocorrectLanguage: "en-US",
       titleModel: "groq/openai/gpt-oss-20b",
       tagModel: "groq/openai/gpt-oss-20b",
+      summaryModel: "groq/openai/gpt-oss-20b",
       pinnedTags: [],
     });
   }
@@ -33,6 +34,7 @@ export async function GET() {
     autocorrectLanguage: r.autocorrect_language,
     titleModel: r.title_model,
     tagModel: r.tag_model,
+    summaryModel: r.summary_model ?? "groq/openai/gpt-oss-20b",
     pinnedTags: r.pinned_tags ?? [],
   });
 }
@@ -50,18 +52,20 @@ export async function PUT(request: Request) {
     autocorrectLanguage,
     titleModel,
     tagModel,
+    summaryModel,
     pinnedTags,
   } = body;
 
   await pool.query(
-    `INSERT INTO user_settings (user_id, speech_provider, autocorrect_provider, autocorrect_language, title_model, tag_model, pinned_tags, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+    `INSERT INTO user_settings (user_id, speech_provider, autocorrect_provider, autocorrect_language, title_model, tag_model, summary_model, pinned_tags, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
      ON CONFLICT (user_id) DO UPDATE SET
        speech_provider = EXCLUDED.speech_provider,
        autocorrect_provider = EXCLUDED.autocorrect_provider,
        autocorrect_language = EXCLUDED.autocorrect_language,
        title_model = EXCLUDED.title_model,
        tag_model = EXCLUDED.tag_model,
+       summary_model = EXCLUDED.summary_model,
        pinned_tags = EXCLUDED.pinned_tags,
        updated_at = now()`,
     [
@@ -71,6 +75,7 @@ export async function PUT(request: Request) {
       autocorrectLanguage,
       titleModel,
       tagModel,
+      summaryModel ?? "groq/openai/gpt-oss-20b",
       pinnedTags ?? [],
     ]
   );
