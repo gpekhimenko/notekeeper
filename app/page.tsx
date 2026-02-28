@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { notesReducer, initialState } from "./lib/useNotesReducer";
@@ -41,11 +41,10 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [status]);
 
-  // Compute all unique tags across all notes (memoized to keep stable reference)
-  const allTags = useMemo(
-    () => Array.from(new Set(Object.values(state.notes).flatMap((n) => n.tags))).sort(),
-    [state.notes]
-  );
+  // Compute all unique tags across all notes
+  const allTags = Array.from(
+    new Set(Object.values(state.notes).flatMap((n) => n.tags))
+  ).sort();
 
   // Flexible filtering: search query > tag filter > date filter
   const allNotes = Object.values(state.notes);

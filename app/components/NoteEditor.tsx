@@ -257,12 +257,12 @@ export default function NoteEditor({
               autoFocus
             />
             <div className="mb-3 h-5">
-              {isSuggestingTitle && !suggestion && (
+              {isSuggestingTitle && (
                 <span className="text-xs text-zinc-400 italic animate-pulse">
                   Suggesting title...
                 </span>
               )}
-              {suggestion && (
+              {!isSuggestingTitle && suggestion && (
                 <button
                   type="button"
                   onClick={() => {
@@ -315,12 +315,12 @@ export default function NoteEditor({
                   </button>
                 )}
               </div>
-              {isSuggestingTags && tagSuggestions.length === 0 && (
+              {isSuggestingTags && (
                 <span className="block mt-1.5 text-xs text-zinc-400 italic animate-pulse">
                   Suggesting tags...
                 </span>
               )}
-              {tagSuggestions.length > 0 && (
+              {!isSuggestingTags && tagSuggestions.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {tagSuggestions.map((tag) => (
                     <button
