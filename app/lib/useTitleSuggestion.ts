@@ -25,7 +25,7 @@ export function useTitleSuggestion(body: string, title: string) {
       return;
     }
 
-    // Debounce 1 second
+    // Debounce 2 seconds
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
@@ -41,7 +41,7 @@ export function useTitleSuggestion(body: string, title: string) {
           setIsLoading(false);
         }
       });
-    }, 1000);
+    }, 2000);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
