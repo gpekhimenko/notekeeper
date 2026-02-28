@@ -99,6 +99,18 @@ export async function suggestTags(
   }
 }
 
+export async function transcribeAudio(blob: Blob): Promise<string> {
+  const form = new FormData();
+  form.append("file", blob, "audio.webm");
+  const res = await fetch("/api/transcribe", {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) throw new Error("Transcription failed");
+  const data = await res.json();
+  return data.text ?? "";
+}
+
 export async function autocorrectText(
   text: string,
   provider?: string,

@@ -68,10 +68,10 @@ export default function SettingsPanel({ settings, onSave, onClose }: SettingsPan
               className="w-full text-sm border border-zinc-200 rounded px-3 py-2 text-zinc-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="web-speech-api">Browser (Web Speech API)</option>
+              <option value="groq-whisper">Groq Whisper</option>
               <option value="deepgram">Deepgram (Coming soon)</option>
-              <option value="whisper">Whisper (Coming soon)</option>
             </select>
-            {draft.speechProvider !== "web-speech-api" && (
+            {draft.speechProvider === "deepgram" && (
               <p className="text-xs text-amber-600 mt-1">
                 This provider is not yet available. Web Speech API will be used as fallback.
               </p>

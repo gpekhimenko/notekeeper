@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Note, UserSettings } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
 import { getTagColor } from "../lib/tagColors";
-import { useSpeechRecognition } from "../lib/useSpeechRecognition";
+import { useVoiceInput } from "../lib/useVoiceInput";
 import { autocorrectText } from "../lib/notesApi";
 import { useTitleSuggestion } from "../lib/useTitleSuggestion";
 import { useTagSuggestion } from "../lib/useTagSuggestion";
@@ -40,7 +40,7 @@ export default function NoteEditor({
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
-  const { isListening, isSupported, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
+  const { isListening, isSupported, isTranscribing, transcript, start: startListening, stop: stopListening } = useVoiceInput(settings?.speechProvider);
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 
@@ -153,7 +153,7 @@ export default function NoteEditor({
               {isSupported && (
                 <button
                   type="button"
-                  disabled={isCorrecting}
+                  disabled={isCorrecting || isTranscribing}
                   onClick={() => {
                     if (isListening) {
                       stopListening();
@@ -189,7 +189,7 @@ export default function NoteEditor({
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                     <line x1="12" x2="12" y1="19" y2="22" />
                   </svg>
-                  {isListening ? "Listening…" : "Dictate"}
+                  {isTranscribing ? "Transcribing…" : isListening ? "Listening…" : "Dictate"}
                 </button>
               )}
               {isCorrecting && (
