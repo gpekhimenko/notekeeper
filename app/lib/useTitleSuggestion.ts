@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { suggestTitle } from "./notesApi";
 
-export function useTitleSuggestion(body: string, title: string) {
+export function useTitleSuggestion(body: string, title: string, model?: string) {
   const [suggestion, setSuggestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -35,7 +35,7 @@ export function useTitleSuggestion(body: string, title: string) {
       abortRef.current = controller;
 
       setIsLoading(true);
-      suggestTitle(body, controller.signal).then((result) => {
+      suggestTitle(body, controller.signal, model).then((result) => {
         if (!controller.signal.aborted) {
           setSuggestion(result);
           setIsLoading(false);
@@ -46,7 +46,7 @@ export function useTitleSuggestion(body: string, title: string) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [body, title]);
+  }, [body, title, model]);
 
   // Cleanup on unmount
   useEffect(() => {

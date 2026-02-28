@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { Note } from "../lib/types";
+import { Note, UserSettings } from "../lib/types";
 import { generateNoteId } from "../lib/noteUtils";
 import { getTagColor } from "../lib/tagColors";
 import { useSpeechRecognition } from "../lib/useSpeechRecognition";
@@ -20,6 +20,7 @@ interface NoteEditorProps {
   onCancel: () => void;
   onBack?: () => void;
   allTags?: string[];
+  settings?: UserSettings;
 }
 
 export default function NoteEditor({
@@ -32,6 +33,7 @@ export default function NoteEditor({
   onCancel,
   onBack,
   allTags = [],
+  settings,
 }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -42,8 +44,8 @@ export default function NoteEditor({
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 
-  const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(body, title);
-  const { suggestions: tagSuggestions, isLoading: isSuggestingTags } = useTagSuggestion(body, tags, allTags);
+  const { suggestion, isLoading: isSuggestingTitle, clearSuggestion } = useTitleSuggestion(body, title, settings?.titleModel);
+  const { suggestions: tagSuggestions, isLoading: isSuggestingTags } = useTagSuggestion(body, tags, allTags, settings?.tagModel);
 
   // Auto-run autocorrect when listening stops (covers both manual stop and mobile auto-stop)
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function NoteEditor({
       const dictated = body.slice(prefix.length).trim();
       if (dictated) {
         setIsCorrecting(true);
-        autocorrectText(dictated).then((corrected) => {
+        autocorrectText(dictated, settings?.autocorrectProvider, settings?.autocorrectLanguage).then((corrected) => {
           setBody(prefix ? prefix + " " + corrected : corrected);
           setIsCorrecting(false);
         });

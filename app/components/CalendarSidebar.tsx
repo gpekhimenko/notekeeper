@@ -14,6 +14,7 @@ interface CalendarSidebarProps {
   filterTags: string[];
   onFilterTag: (tag: string) => void;
   onBack?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export default function CalendarSidebar({
@@ -25,6 +26,7 @@ export default function CalendarSidebar({
   filterTags,
   onFilterTag,
   onBack,
+  onOpenSettings,
 }: CalendarSidebarProps) {
   const selected = new Date(selectedDate + "T00:00:00");
 
@@ -146,12 +148,26 @@ export default function CalendarSidebar({
       {userEmail && (
         <div className="border-t border-zinc-200 px-4 py-3">
           <p className="text-xs text-zinc-500 truncate mb-2">{userEmail}</p>
-          <button
-            onClick={() => signOut()}
-            className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => signOut()}
+              className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
+            >
+              Sign out
+            </button>
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                className="text-zinc-400 hover:text-zinc-700 transition-colors p-0.5"
+                aria-label="Open settings"
+                title="Settings"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.982.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </aside>

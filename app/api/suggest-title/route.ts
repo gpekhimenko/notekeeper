@@ -80,13 +80,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { body } = await request.json();
+  const { body, model } = await request.json();
   if (!body || typeof body !== "string") {
     return NextResponse.json({ error: "Missing body" }, { status: 400 });
   }
 
   try {
-    const provider = process.env.TITLE_PROVIDER ?? "groq";
+    // Determine provider from model parameter or env fallback
+    const provider =
+      model === "huggingface/mistral-7b"
+        ? "huggingface"
+        : model === "groq/openai/gpt-oss-20b"
+          ? "groq"
+          : (process.env.TITLE_PROVIDER ?? "groq");
     const raw =
       provider === "huggingface"
         ? await suggestWithHuggingFace(body)

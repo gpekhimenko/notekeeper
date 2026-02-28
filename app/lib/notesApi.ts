@@ -1,4 +1,4 @@
-import { Note } from "./types";
+import { Note, UserSettings } from "./types";
 
 type NotePayload = Omit<Note, "createdAt" | "updatedAt">;
 
@@ -33,15 +33,41 @@ export async function deleteNote(id: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete note");
 }
 
+export async function fetchSettings(): Promise<UserSettings> {
+  const res = await fetch("/api/settings");
+  if (!res.ok) throw new Error("Failed to fetch settings");
+  return res.json();
+}
+
+export async function saveSettings(settings: UserSettings): Promise<void> {
+  const res = await fetch("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  if (!res.ok) throw new Error("Failed to save settings");
+}
+
+export async function fetchPopularTags(): Promise<{ tag: string; count: number }[]> {
+  try {
+    const res = await fetch("/api/popular-tags");
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function suggestTitle(
   body: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  model?: string
 ): Promise<string> {
   try {
     const res = await fetch("/api/suggest-title", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body, model }),
       signal,
     });
     if (!res.ok) return "";
@@ -55,13 +81,14 @@ export async function suggestTitle(
 export async function suggestTags(
   body: string,
   existingTags: string[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  model?: string
 ): Promise<string[]> {
   try {
     const res = await fetch("/api/suggest-tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body, existingTags }),
+      body: JSON.stringify({ body, existingTags, model }),
       signal,
     });
     if (!res.ok) return [];
@@ -72,12 +99,16 @@ export async function suggestTags(
   }
 }
 
-export async function autocorrectText(text: string): Promise<string> {
+export async function autocorrectText(
+  text: string,
+  provider?: string,
+  language?: string
+): Promise<string> {
   try {
     const res = await fetch("/api/autocorrect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, provider, language }),
     });
     if (!res.ok) return text;
     const data = await res.json();

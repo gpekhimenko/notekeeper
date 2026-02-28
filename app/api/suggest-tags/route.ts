@@ -32,14 +32,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { body, existingTags } = await request.json();
+  const { body, existingTags, model } = await request.json();
   if (!body || typeof body !== "string") {
     return NextResponse.json({ error: "Missing body" }, { status: 400 });
-  }
-
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ tags: [] });
   }
 
   try {
@@ -48,34 +43,57 @@ export async function POST(request: Request) {
       ? `You are a note tag selector. Choose 2-4 tags from this list ONLY: ${existingTags.join(", ")}. Reply with only the chosen tags as a comma-separated list. Do not invent new tags. No explanation, no numbering, no quotes.`
       : `You are a note tag generator. Suggest 2-4 short tags (1-2 words each) for the given note. Reply with only the tags as a comma-separated list. No explanation, no numbering, no quotes.`;
 
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-20b",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: `Tag this note:\n\n${body}`,
-          },
-        ],
-        max_tokens: 200,
-        temperature: 0.3,
-      }),
-    });
+    const useHuggingFace = model === "huggingface/mistral-7b";
+    let raw: string;
 
-    if (!res.ok) throw new Error(`Groq API error: ${res.status}`);
-    const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content ?? "";
+    if (useHuggingFace) {
+      const token = process.env.HF_TOKEN;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const prompt = `<s>[INST] ${systemPrompt}\n\n${body} [/INST]`;
+      const res = await fetch(
+        "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: { max_new_tokens: 100, temperature: 0.3 },
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(`HuggingFace API error: ${res.status}`);
+      const data = await res.json();
+      const generated = data?.[0]?.generated_text ?? "";
+      const parts = generated.split("[/INST]");
+      raw = parts.length > 1 ? parts[parts.length - 1].trim() : generated.trim();
+    } else {
+      const apiKey = process.env.GROQ_API_KEY;
+      if (!apiKey) return NextResponse.json({ tags: [] });
+
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-20b",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Tag this note:\n\n${body}` },
+          ],
+          max_tokens: 200,
+          temperature: 0.3,
+        }),
+      });
+      if (!res.ok) throw new Error(`Groq API error: ${res.status}`);
+      const data = await res.json();
+      raw = data.choices?.[0]?.message?.content ?? "";
+    }
+
     let tags = parseTags(raw).slice(0, 5);
-    // When existing tags are provided, only return tags from that list
     if (hasExisting) {
       tags = tags.filter((t) => existingTags.includes(t));
     }

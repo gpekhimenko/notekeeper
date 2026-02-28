@@ -13,16 +13,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { text } = await request.json();
+  const { text, provider, language } = await request.json();
   if (!text || typeof text !== "string") {
     return NextResponse.json({ error: "Missing text" }, { status: 400 });
   }
+
+  // If autocorrect is disabled, return text unchanged
+  if (provider === "disabled") {
+    return NextResponse.json({ corrected: text });
+  }
+
+  const lang = language || "en-US";
 
   try {
     const res = await fetch("https://api.languagetool.org/v2/check", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ text, language: "en-US" }),
+      body: new URLSearchParams({ text, language: lang }),
     });
 
     if (!res.ok) {

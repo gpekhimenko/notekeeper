@@ -51,3 +51,15 @@ CREATE TABLE IF NOT EXISTS notes (
 
 CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_notes_user_date ON notes(user_id, date);
+
+-- User settings table
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  speech_provider TEXT NOT NULL DEFAULT 'web-speech-api',
+  autocorrect_provider TEXT NOT NULL DEFAULT 'languagetool',
+  autocorrect_language TEXT NOT NULL DEFAULT 'en-US',
+  title_model TEXT NOT NULL DEFAULT 'groq/openai/gpt-oss-20b',
+  tag_model TEXT NOT NULL DEFAULT 'groq/openai/gpt-oss-20b',
+  pinned_tags TEXT[] NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

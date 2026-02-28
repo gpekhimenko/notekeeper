@@ -4,12 +4,13 @@ import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { notesReducer, initialState } from "./lib/useNotesReducer";
-import { Note, NotesStore, MobilePanel } from "./lib/types";
-import { fetchNotes, createNote, updateNote, deleteNote } from "./lib/notesApi";
+import { Note, NotesStore, MobilePanel, UserSettings, DEFAULT_SETTINGS } from "./lib/types";
+import { fetchNotes, createNote, updateNote, deleteNote, fetchSettings, saveSettings } from "./lib/notesApi";
 import CalendarSidebar from "./components/CalendarSidebar";
 import NotesList from "./components/NotesList";
 import NoteEditor from "./components/NoteEditor";
 import EmptyState from "./components/EmptyState";
+import SettingsPanel from "./components/SettingsPanel";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -17,6 +18,8 @@ export default function Home() {
   const [state, dispatch] = useReducer(notesReducer, initialState);
   const [loading, setLoading] = useState(true);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("list");
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -25,18 +28,20 @@ export default function Home() {
     }
   }, [status, router]);
 
-  // Load notes from API on mount
+  // Load notes and settings from API on mount
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    fetchNotes()
-      .then((notes) => {
+    Promise.all([
+      fetchNotes().then((notes) => {
         const store: NotesStore = {};
         for (const n of notes) {
           store[n.id] = n;
         }
         dispatch({ type: "LOAD_NOTES", payload: store });
-      })
+      }),
+      fetchSettings().then(setSettings).catch(console.error),
+    ])
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [status]);
@@ -104,10 +109,20 @@ export default function Home() {
     }
   }
 
+  async function handleSaveSettings(newSettings: UserSettings) {
+    try {
+      await saveSettings(newSettings);
+      setSettings(newSettings);
+      setSettingsOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   if (status === "loading" || loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
-        <p className="text-sm text-zinc-400">Loading…</p>
+        <p className="text-sm text-zinc-400">Loading...</p>
       </div>
     );
   }
@@ -141,6 +156,7 @@ export default function Home() {
             dispatch({ type: "SET_FILTER_TAGS", payload: newTags });
           }}
           onBack={() => setMobilePanel("list")}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       </div>
 
@@ -182,12 +198,21 @@ export default function Home() {
               }}
               onBack={() => setMobilePanel("list")}
               allTags={allTags}
+              settings={settings}
             />
           ) : (
             <EmptyState />
           )}
         </div>
       </main>
+
+      {settingsOpen && (
+        <SettingsPanel
+          settings={settings}
+          onSave={handleSaveSettings}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 }

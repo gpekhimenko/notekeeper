@@ -4,7 +4,8 @@ import { suggestTags } from "./notesApi";
 export function useTagSuggestion(
   body: string,
   currentTags: string[],
-  allTags: string[]
+  allTags: string[],
+  model?: string
 ) {
   const [rawSuggestions, setRawSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +29,7 @@ export function useTagSuggestion(
       abortRef.current = controller;
 
       setIsLoading(true);
-      suggestTags(body, allTags, controller.signal).then((result) => {
+      suggestTags(body, allTags, controller.signal, model).then((result) => {
         if (!controller.signal.aborted) {
           setRawSuggestions(result);
           setIsLoading(false);
@@ -39,7 +40,7 @@ export function useTagSuggestion(
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [body, allTags]);
+  }, [body, allTags, model]);
 
   // Cleanup on unmount
   useEffect(() => {

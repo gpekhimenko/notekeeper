@@ -21,6 +21,24 @@ export interface AppState {
 
 export type MobilePanel = "calendar" | "list" | "editor";
 
+export interface UserSettings {
+  speechProvider: string;
+  autocorrectProvider: string;
+  autocorrectLanguage: string;
+  titleModel: string;
+  tagModel: string;
+  pinnedTags: string[];
+}
+
+export const DEFAULT_SETTINGS: UserSettings = {
+  speechProvider: "web-speech-api",
+  autocorrectProvider: "languagetool",
+  autocorrectLanguage: "en-US",
+  titleModel: "groq/openai/gpt-oss-20b",
+  tagModel: "groq/openai/gpt-oss-20b",
+  pinnedTags: [],
+};
+
 export type AppAction =
   | { type: "LOAD_NOTES"; payload: NotesStore }
   | { type: "SELECT_DATE"; payload: string }
