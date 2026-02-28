@@ -85,7 +85,10 @@ export function useSpeechRecognition() {
     };
 
     recognition.onend = () => {
-      // Accumulate finals from this session
+      // Accumulate finals from this session, ensuring space between sessions
+      if (accumulatedFinalsRef.current && sessionFinalsRef.current && !accumulatedFinalsRef.current.endsWith(" ")) {
+        accumulatedFinalsRef.current += " ";
+      }
       accumulatedFinalsRef.current += sessionFinalsRef.current;
       sessionFinalsRef.current = "";
 
