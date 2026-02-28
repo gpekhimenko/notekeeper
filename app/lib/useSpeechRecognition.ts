@@ -2,6 +2,21 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 
+// Desktop Chrome doesn't auto-convert spoken punctuation like mobile does
+function convertPunctuation(text: string): string {
+  return text
+    .replace(/\bperiod\b/gi, ".")
+    .replace(/\bcomma\b/gi, ",")
+    .replace(/\bquestion mark\b/gi, "?")
+    .replace(/\bexclamation mark\b/gi, "!")
+    .replace(/\bexclamation point\b/gi, "!")
+    .replace(/\bcolon\b/gi, ":")
+    .replace(/\bsemicolon\b/gi, ";")
+    .replace(/\bnew line\b/gi, "\n")
+    .replace(/\bnew paragraph\b/gi, "\n\n")
+    .replace(/\s+([.,?!:;])/g, "$1");
+}
+
 function getRecognitionConstructor(): (new () => SpeechRecognition) | null {
   if (typeof window === "undefined") return null;
   return (
@@ -58,7 +73,8 @@ export function useSpeechRecognition() {
         }
       }
       sessionFinalsRef.current = sessionFinals;
-      setTranscript(accumulatedFinalsRef.current + sessionFinals + interim);
+      const raw = accumulatedFinalsRef.current + sessionFinals + interim;
+      setTranscript(mobile ? raw : convertPunctuation(raw));
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
