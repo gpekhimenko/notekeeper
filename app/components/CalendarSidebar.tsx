@@ -12,6 +12,7 @@ interface CalendarSidebarProps {
   userEmail?: string;
   allTags: string[];
   filterTags: string[];
+  excludeTags: string[];
   onFilterTag: (tag: string) => void;
   onBack?: () => void;
   onOpenSettings?: () => void;
@@ -24,6 +25,7 @@ export default function CalendarSidebar({
   userEmail,
   allTags,
   filterTags,
+  excludeTags,
   onFilterTag,
   onBack,
   onOpenSettings,
@@ -99,7 +101,7 @@ export default function CalendarSidebar({
               <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                 Tags
               </span>
-              {filterTags.length > 0 && (
+              {(filterTags.length > 0 || excludeTags.length > 0) && (
                 <button
                   onClick={() => onFilterTag("")}
                   className="text-[10px] text-zinc-400 hover:text-zinc-700 transition-colors"
@@ -112,14 +114,17 @@ export default function CalendarSidebar({
               {allTags.map((tag) => {
                 const color = getTagColor(tag);
                 const isActive = filterTags.includes(tag);
+                const isExcluded = excludeTags.includes(tag);
                 return (
                   <button
                     key={tag}
                     onClick={() => onFilterTag(tag)}
                     className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
-                      isActive
-                        ? `${color.activeBg} ${color.activeText}`
-                        : `${color.bg} ${color.text} hover:opacity-80`
+                      isExcluded
+                        ? "bg-red-100 text-red-600 line-through"
+                        : isActive
+                          ? `${color.activeBg} ${color.activeText}`
+                          : `${color.bg} ${color.text} hover:opacity-80`
                     }`}
                   >
                     {tag}

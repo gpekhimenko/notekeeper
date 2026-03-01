@@ -8,6 +8,7 @@ export const initialState: AppState = {
   editorMode: "view",
   searchQuery: "",
   filterTags: [],
+  excludeTags: [],
 };
 
 export function notesReducer(state: AppState, action: AppAction): AppState {
@@ -23,6 +24,7 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
         editorMode: "view",
         searchQuery: "",
         filterTags: [],
+        excludeTags: [],
       };
 
     case "SELECT_NOTE": {
@@ -96,6 +98,14 @@ export function notesReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         filterTags: action.payload,
+        selectedNoteId: null,
+        editorMode: "view",
+      };
+
+    case "SET_EXCLUDE_TAGS":
+      return {
+        ...state,
+        excludeTags: action.payload,
         selectedNoteId: null,
         editorMode: "view",
       };

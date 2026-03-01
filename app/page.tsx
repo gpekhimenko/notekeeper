@@ -55,9 +55,10 @@ export default function Home() {
   const allNotes = Object.values(state.notes);
   const isSearching = state.searchQuery.trim().length > 0;
   const isFilteringByTag = state.filterTags.length > 0;
+  const isExcludingByTag = state.excludeTags.length > 0;
 
   let filteredNotes: Note[];
-  if (isSearching || isFilteringByTag) {
+  if (isSearching || isFilteringByTag || isExcludingByTag) {
     filteredNotes = allNotes;
     if (isSearching) {
       const q = state.searchQuery.toLowerCase();
@@ -71,6 +72,11 @@ export default function Home() {
     if (isFilteringByTag) {
       filteredNotes = filteredNotes.filter((n) =>
         state.filterTags.every((t) => n.tags.includes(t))
+      );
+    }
+    if (isExcludingByTag) {
+      filteredNotes = filteredNotes.filter((n) =>
+        !state.excludeTags.some((t) => n.tags.includes(t))
       );
     }
   } else {
@@ -149,15 +155,26 @@ export default function Home() {
           userEmail={session?.user?.email ?? undefined}
           allTags={allTags}
           filterTags={state.filterTags}
+          excludeTags={state.excludeTags}
           onFilterTag={(tag) => {
             if (!tag) {
               dispatch({ type: "SET_FILTER_TAGS", payload: [] });
+              dispatch({ type: "SET_EXCLUDE_TAGS", payload: [] });
               return;
             }
-            const newTags = state.filterTags.includes(tag)
-              ? state.filterTags.filter((t) => t !== tag)
-              : [...state.filterTags, tag];
-            dispatch({ type: "SET_FILTER_TAGS", payload: newTags });
+            const isIncluded = state.filterTags.includes(tag);
+            const isExcluded = state.excludeTags.includes(tag);
+            if (!isIncluded && !isExcluded) {
+              // off → include
+              dispatch({ type: "SET_FILTER_TAGS", payload: [...state.filterTags, tag] });
+            } else if (isIncluded) {
+              // include → exclude
+              dispatch({ type: "SET_FILTER_TAGS", payload: state.filterTags.filter((t) => t !== tag) });
+              dispatch({ type: "SET_EXCLUDE_TAGS", payload: [...state.excludeTags, tag] });
+            } else {
+              // exclude → off
+              dispatch({ type: "SET_EXCLUDE_TAGS", payload: state.excludeTags.filter((t) => t !== tag) });
+            }
           }}
           onBack={() => setMobilePanel("list")}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -183,6 +200,7 @@ export default function Home() {
             isSearching={isSearching}
             isFilteringByTag={isFilteringByTag}
             filterTags={state.filterTags}
+            excludeTags={state.excludeTags}
             onShowCalendar={() => setMobilePanel("calendar")}
           />
         </div>

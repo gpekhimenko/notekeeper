@@ -17,6 +17,7 @@ export interface AppState {
   editorMode: "view" | "edit" | "new";
   searchQuery: string;
   filterTags: string[];
+  excludeTags: string[];
 }
 
 export type MobilePanel = "calendar" | "list" | "editor";
@@ -51,4 +52,5 @@ export type AppAction =
   | { type: "DELETE_NOTE"; payload: string }
   | { type: "CANCEL_EDIT" }
   | { type: "SET_SEARCH_QUERY"; payload: string }
-  | { type: "SET_FILTER_TAGS"; payload: string[] };
+  | { type: "SET_FILTER_TAGS"; payload: string[] }
+  | { type: "SET_EXCLUDE_TAGS"; payload: string[] };

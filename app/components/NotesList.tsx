@@ -15,6 +15,7 @@ interface NotesListProps {
   isSearching: boolean;
   isFilteringByTag: boolean;
   filterTags: string[];
+  excludeTags: string[];
   onShowCalendar?: () => void;
 }
 
@@ -29,21 +30,29 @@ export default function NotesList({
   isSearching,
   isFilteringByTag,
   filterTags,
+  excludeTags,
   onShowCalendar,
 }: NotesListProps) {
-  const headerText = isSearching && isFilteringByTag
-    ? `Results for "${searchQuery}" in tagged: ${filterTags.join(", ")}`
+  const isExcludingByTag = excludeTags.length > 0;
+  const tagLabel = [
+    ...filterTags,
+    ...excludeTags.map((t) => `\u2212${t}`),
+  ].join(", ");
+  const isFiltering = isFilteringByTag || isExcludingByTag;
+
+  const headerText = isSearching && isFiltering
+    ? `Results for "${searchQuery}" in tagged: ${tagLabel}`
     : isSearching
       ? `Results for "${searchQuery}"`
-      : isFilteringByTag
-        ? `Tagged: ${filterTags.join(", ")}`
+      : isFiltering
+        ? `Tagged: ${tagLabel}`
         : formatDateDisplay(selectedDate);
 
-  const emptyText = isSearching && isFilteringByTag
+  const emptyText = isSearching && isFiltering
     ? "No notes matching search and tags"
     : isSearching
       ? "No matching notes"
-      : isFilteringByTag
+      : isFiltering
         ? "No notes with these tags"
         : "No notes for this day";
 
@@ -109,7 +118,7 @@ export default function NotesList({
                     </p>
                   )}
                   {/* Show date when searching or filtering by tag */}
-                  {(isSearching || isFilteringByTag) && (
+                  {(isSearching || isFiltering) && (
                     <p className="text-[10px] text-zinc-400 mt-1">
                       {note.date}
                     </p>
