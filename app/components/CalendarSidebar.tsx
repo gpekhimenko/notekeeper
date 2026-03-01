@@ -13,6 +13,7 @@ interface CalendarSidebarProps {
   allTags: string[];
   filterTags: string[];
   excludeTags: string[];
+  pinnedTags: string[];
   onFilterTag: (tag: string) => void;
   onBack?: () => void;
   onOpenSettings?: () => void;
@@ -26,6 +27,7 @@ export default function CalendarSidebar({
   allTags,
   filterTags,
   excludeTags,
+  pinnedTags,
   onFilterTag,
   onBack,
   onOpenSettings,
@@ -115,6 +117,7 @@ export default function CalendarSidebar({
                 const color = getTagColor(tag);
                 const isActive = filterTags.includes(tag);
                 const isExcluded = excludeTags.includes(tag);
+                const isPinned = pinnedTags.includes(tag);
                 return (
                   <button
                     key={tag}
@@ -125,7 +128,7 @@ export default function CalendarSidebar({
                         : isActive
                           ? `${color.activeBg} ${color.activeText}`
                           : `${color.bg} ${color.text} hover:opacity-80`
-                    }`}
+                    }${isPinned && !isActive && !isExcluded ? " ring-1 ring-zinc-300" : ""}`}
                   >
                     {tag}
                   </button>

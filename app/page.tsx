@@ -46,10 +46,23 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [status]);
 
-  // Compute all unique tags across all notes
-  const allTags = Array.from(
+  // Compute all unique tags across all notes, including pinned tags
+  const noteTags = Array.from(
     new Set(Object.values(state.notes).flatMap((n) => n.tags))
   ).sort();
+  const allTags = Array.from(
+    new Set([...settings.pinnedTags, ...noteTags])
+  );
+  // Keep pinned tags first (in pinned order), then remaining sorted alphabetically
+  const pinnedSet = new Set(settings.pinnedTags);
+  allTags.sort((a, b) => {
+    const aPinned = pinnedSet.has(a);
+    const bPinned = pinnedSet.has(b);
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    if (aPinned && bPinned) return settings.pinnedTags.indexOf(a) - settings.pinnedTags.indexOf(b);
+    return a.localeCompare(b);
+  });
 
   // Flexible filtering: search + tag filters combine (AND); date when neither active
   const allNotes = Object.values(state.notes);
@@ -156,6 +169,7 @@ export default function Home() {
           allTags={allTags}
           filterTags={state.filterTags}
           excludeTags={state.excludeTags}
+          pinnedTags={settings.pinnedTags}
           onFilterTag={(tag) => {
             if (!tag) {
               dispatch({ type: "SET_FILTER_TAGS", payload: [] });
