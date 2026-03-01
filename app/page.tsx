@@ -51,24 +51,28 @@ export default function Home() {
     new Set(Object.values(state.notes).flatMap((n) => n.tags))
   ).sort();
 
-  // Flexible filtering: search query > tag filter > date filter
+  // Flexible filtering: search + tag filters combine (AND); date when neither active
   const allNotes = Object.values(state.notes);
   const isSearching = state.searchQuery.trim().length > 0;
   const isFilteringByTag = state.filterTags.length > 0;
 
   let filteredNotes: Note[];
-  if (isSearching) {
-    const q = state.searchQuery.toLowerCase();
-    filteredNotes = allNotes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.body.toLowerCase().includes(q) ||
-        n.tags.some((t) => t.toLowerCase().includes(q))
-    );
-  } else if (isFilteringByTag) {
-    filteredNotes = allNotes.filter((n) =>
-      state.filterTags.every((t) => n.tags.includes(t))
-    );
+  if (isSearching || isFilteringByTag) {
+    filteredNotes = allNotes;
+    if (isSearching) {
+      const q = state.searchQuery.toLowerCase();
+      filteredNotes = filteredNotes.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.body.toLowerCase().includes(q) ||
+          n.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    if (isFilteringByTag) {
+      filteredNotes = filteredNotes.filter((n) =>
+        state.filterTags.every((t) => n.tags.includes(t))
+      );
+    }
   } else {
     filteredNotes = allNotes.filter((n) => n.date === state.selectedDate);
   }

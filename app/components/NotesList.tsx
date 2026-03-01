@@ -31,17 +31,21 @@ export default function NotesList({
   filterTags,
   onShowCalendar,
 }: NotesListProps) {
-  const headerText = isSearching
-    ? `Results for "${searchQuery}"`
-    : isFilteringByTag
-      ? `Tagged: ${filterTags.join(", ")}`
-      : formatDateDisplay(selectedDate);
+  const headerText = isSearching && isFilteringByTag
+    ? `Results for "${searchQuery}" in tagged: ${filterTags.join(", ")}`
+    : isSearching
+      ? `Results for "${searchQuery}"`
+      : isFilteringByTag
+        ? `Tagged: ${filterTags.join(", ")}`
+        : formatDateDisplay(selectedDate);
 
-  const emptyText = isSearching
-    ? "No matching notes"
-    : isFilteringByTag
-      ? "No notes with these tags"
-      : "No notes for this day";
+  const emptyText = isSearching && isFilteringByTag
+    ? "No notes matching search and tags"
+    : isSearching
+      ? "No matching notes"
+      : isFilteringByTag
+        ? "No notes with these tags"
+        : "No notes for this day";
 
   return (
     <div className="w-full md:w-64 border-r border-zinc-200 bg-zinc-50 flex flex-col">
