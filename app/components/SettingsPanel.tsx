@@ -1,25 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserSettings, DEFAULT_SETTINGS } from "../lib/types";
-import { fetchPopularTags } from "../lib/notesApi";
+import { UserSettings, DEFAULT_SETTINGS, AdminUser } from "../lib/types";
+import { fetchPopularTags, fetchAdminUsers } from "../lib/notesApi";
 
 interface SettingsPanelProps {
   settings: UserSettings;
   onSave: (settings: UserSettings) => void;
   onClose: () => void;
+  isAdmin?: boolean;
 }
 
-export default function SettingsPanel({ settings, onSave, onClose }: SettingsPanelProps) {
+export default function SettingsPanel({ settings, onSave, onClose, isAdmin }: SettingsPanelProps) {
   const [draft, setDraft] = useState<UserSettings>(settings);
   const [popularTags, setPopularTags] = useState<{ tag: string; count: number }[]>([]);
   const [loadingTags, setLoadingTags] = useState(true);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     fetchPopularTags()
       .then(setPopularTags)
       .finally(() => setLoadingTags(false));
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    setLoadingUsers(true);
+    fetchAdminUsers()
+      .then(setAdminUsers)
+      .finally(() => setLoadingUsers(false));
+  }, [isAdmin]);
 
   function update<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -181,6 +192,59 @@ export default function SettingsPanel({ settings, onSave, onClose }: SettingsPan
               </div>
             )}
           </section>
+
+          {/* Admin: Users */}
+          {isAdmin && (
+            <section>
+              <h3 className="text-sm font-medium text-zinc-700 mb-2">Users</h3>
+              {loadingUsers ? (
+                <p className="text-xs text-zinc-400 italic animate-pulse">Loading users...</p>
+              ) : adminUsers.length === 0 ? (
+                <p className="text-xs text-zinc-400">No users found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {adminUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-3 bg-zinc-50 border border-zinc-100 rounded px-3 py-2"
+                    >
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt=""
+                          className="w-8 h-8 rounded-full shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-zinc-300 text-white flex items-center justify-center text-xs font-medium shrink-0">
+                          {(user.name ?? user.email).charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-zinc-800 truncate">
+                          {user.name ?? user.email}
+                        </p>
+                        {user.name && (
+                          <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-zinc-600">
+                          {user.noteCount} note{user.noteCount !== 1 ? "s" : ""}
+                          {" / "}
+                          {user.tagCount} tag{user.tagCount !== 1 ? "s" : ""}
+                        </p>
+                        <p className="text-xs text-zinc-400">
+                          {user.lastActive
+                            ? new Date(user.lastActive).toLocaleDateString()
+                            : "No activity"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         {/* Footer */}

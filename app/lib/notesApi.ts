@@ -1,4 +1,4 @@
-import { Note, UserSettings } from "./types";
+import { Note, UserSettings, AdminUser } from "./types";
 
 type NotePayload = Omit<Note, "createdAt" | "updatedAt">;
 
@@ -33,9 +33,15 @@ export async function deleteNote(id: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete note");
 }
 
-export async function fetchSettings(): Promise<UserSettings> {
+export async function fetchSettings(): Promise<UserSettings & { isAdmin?: boolean }> {
   const res = await fetch("/api/settings");
   if (!res.ok) throw new Error("Failed to fetch settings");
+  return res.json();
+}
+
+export async function fetchAdminUsers(): Promise<AdminUser[]> {
+  const res = await fetch("/api/admin/users");
+  if (!res.ok) return [];
   return res.json();
 }
 

@@ -42,6 +42,16 @@ export const DEFAULT_SETTINGS: UserSettings = {
   pinnedTags: [],
 };
 
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  noteCount: number;
+  tagCount: number;
+  lastActive: string | null;
+}
+
 export type AppAction =
   | { type: "LOAD_NOTES"; payload: NotesStore }
   | { type: "SELECT_DATE"; payload: string }

@@ -20,6 +20,7 @@ export default function Home() {
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("list");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -40,7 +41,11 @@ export default function Home() {
         }
         dispatch({ type: "LOAD_NOTES", payload: store });
       }),
-      fetchSettings().then(setSettings).catch(console.error),
+      fetchSettings().then((data) => {
+        const { isAdmin: admin, ...rest } = data;
+        setSettings(rest);
+        setIsAdmin(!!admin);
+      }).catch(console.error),
     ])
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -247,6 +252,7 @@ export default function Home() {
           settings={settings}
           onSave={handleSaveSettings}
           onClose={() => setSettingsOpen(false)}
+          isAdmin={isAdmin}
         />
       )}
     </div>

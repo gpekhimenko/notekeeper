@@ -15,6 +15,12 @@ export async function GET() {
     [session.user.id]
   );
 
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdmin = adminEmails.includes((session.user.email ?? "").toLowerCase());
+
   if (rows.length === 0) {
     return NextResponse.json({
       speechProvider: "web-speech-api",
@@ -24,6 +30,7 @@ export async function GET() {
       tagModel: "groq/openai/gpt-oss-20b",
       summaryModel: "groq/openai/gpt-oss-20b",
       pinnedTags: [],
+      isAdmin,
     });
   }
 
@@ -36,6 +43,7 @@ export async function GET() {
     tagModel: r.tag_model,
     summaryModel: r.summary_model ?? "groq/openai/gpt-oss-20b",
     pinnedTags: r.pinned_tags ?? [],
+    isAdmin,
   });
 }
 
