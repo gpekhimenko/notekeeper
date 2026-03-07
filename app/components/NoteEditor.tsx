@@ -42,7 +42,20 @@ export default function NoteEditor({
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [summary, setSummary] = useState("");
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const { isListening, isSupported, isTranscribing, transcript, start: startListening, stop: stopListening } = useVoiceInput(settings?.speechProvider);
+  const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setMicDeviceId(localStorage.getItem("preferredMicrophone") || undefined);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "preferredMicrophone") {
+        setMicDeviceId(e.newValue || undefined);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const { isListening, isSupported, isTranscribing, transcript, start: startListening, stop: stopListening } = useVoiceInput(settings?.speechProvider, micDeviceId);
   const bodyPrefixRef = useRef("");
   const wasListeningRef = useRef(false);
 

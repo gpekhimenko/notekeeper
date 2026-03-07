@@ -5,7 +5,7 @@ import { transcribeAudio } from "./notesApi";
 
 const SEGMENT_MS = 3000;
 
-export function useGroqWhisper() {
+export function useGroqWhisper(deviceId?: string) {
   const [isListening, setIsListening] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -104,7 +104,16 @@ export function useGroqWhisper() {
     setIsTranscribing(false);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioConstraints: MediaTrackConstraints = deviceId
+        ? { deviceId: { exact: deviceId } }
+        : {};
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      } catch {
+        // Fallback to default device if the specified one fails
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       streamRef.current = stream;
 
       startSegment(stream);

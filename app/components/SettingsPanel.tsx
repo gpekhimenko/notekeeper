@@ -17,6 +17,16 @@ export default function SettingsPanel({ settings, onSave, onClose, isAdmin }: Se
   const [loadingTags, setLoadingTags] = useState(true);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
+  const [selectedMic, setSelectedMic] = useState(
+    () => (typeof window !== "undefined" ? localStorage.getItem("preferredMicrophone") : null) ?? ""
+  );
+
+  useEffect(() => {
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
+      setMicrophones(devices.filter((d) => d.kind === "audioinput"));
+    });
+  }, []);
 
   useEffect(() => {
     fetchPopularTags()
@@ -87,6 +97,27 @@ export default function SettingsPanel({ settings, onSave, onClose, isAdmin }: Se
                 This provider is not yet available. Web Speech API will be used as fallback.
               </p>
             )}
+            <label className="text-xs text-zinc-500 mt-2 mb-1 block">Microphone</label>
+            <select
+              value={selectedMic}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedMic(value);
+                if (value) {
+                  localStorage.setItem("preferredMicrophone", value);
+                } else {
+                  localStorage.removeItem("preferredMicrophone");
+                }
+              }}
+              className="w-full text-sm border border-zinc-200 rounded px-3 py-2 text-zinc-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Default</option>
+              {microphones.map((mic) => (
+                <option key={mic.deviceId} value={mic.deviceId}>
+                  {mic.label || `Microphone (${mic.deviceId.slice(0, 8)}…)`}
+                </option>
+              ))}
+            </select>
           </section>
 
           {/* Text Correction */}
