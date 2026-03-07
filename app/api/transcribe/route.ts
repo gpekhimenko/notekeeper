@@ -37,7 +37,22 @@ export async function POST(request: Request) {
     }
 
     const data = await res.json();
-    return NextResponse.json({ text: data.text ?? "" });
+    let text = (data.text ?? "").trim();
+
+    // Whisper hallucinates repetitive phrases on silent/quiet segments
+    const hallucinations = [
+      /^(thank you[.!,\s]*)+$/i,
+      /^(thanks for watching[.!,\s]*)+$/i,
+      /^(you[.!,\s]*)+$/i,
+      /^(bye[.!,\s]*)+$/i,
+      /^(please subscribe[.!,\s]*)+$/i,
+      /^(so[.!,\s]*)+$/i,
+    ];
+    if (hallucinations.some((re) => re.test(text))) {
+      text = "";
+    }
+
+    return NextResponse.json({ text });
   } catch (error) {
     console.error("Transcription error:", error);
     return NextResponse.json({ error: "Transcription failed" }, { status: 500 });
