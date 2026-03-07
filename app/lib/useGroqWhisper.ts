@@ -17,6 +17,8 @@ export function useGroqWhisper(deviceId?: string) {
   const accumulatedRef = useRef("");
   const pendingRef = useRef(0);
   const stoppingRef = useRef(false);
+  const deviceIdRef = useRef(deviceId);
+  deviceIdRef.current = deviceId;
 
   useEffect(() => {
     setIsSupported(
@@ -104,8 +106,9 @@ export function useGroqWhisper(deviceId?: string) {
     setIsTranscribing(false);
 
     try {
-      const audioConstraints: MediaTrackConstraints = deviceId
-        ? { deviceId: { exact: deviceId } }
+      const did = deviceIdRef.current;
+      const audioConstraints: MediaTrackConstraints = did
+        ? { deviceId: { exact: did } }
         : {};
       let stream: MediaStream;
       try {

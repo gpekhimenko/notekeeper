@@ -53,7 +53,7 @@ export default function NoteEditor({
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [settings]);
 
   const { isListening, isSupported, isTranscribing, transcript, start: startListening, stop: stopListening } = useVoiceInput(settings?.speechProvider, micDeviceId);
   const bodyPrefixRef = useRef("");
