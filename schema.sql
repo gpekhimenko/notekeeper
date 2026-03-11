@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   "emailVerified" TIMESTAMPTZ,
   image TEXT
 );
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   session_state TEXT,
   UNIQUE(provider, "providerAccountId")
 );
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires TIMESTAMPTZ NOT NULL
 );
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS verification_tokens (
   identifier TEXT NOT NULL,
@@ -36,6 +39,7 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
   expires TIMESTAMPTZ NOT NULL,
   PRIMARY KEY (identifier, token)
 );
+ALTER TABLE verification_tokens ENABLE ROW LEVEL SECURITY;
 
 -- App-specific notes table
 CREATE TABLE IF NOT EXISTS notes (
@@ -49,6 +53,7 @@ CREATE TABLE IF NOT EXISTS notes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_notes_user_date ON notes(user_id, date);
 
@@ -64,3 +69,13 @@ CREATE TABLE IF NOT EXISTS user_settings (
   pinned_tags TEXT[] NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+
+-- Deny-all policies: app connects as postgres (bypasses RLS),
+-- these block access via Supabase anon/authenticated keys
+CREATE POLICY deny_all ON users FOR ALL TO anon, authenticated USING (false);
+CREATE POLICY deny_all ON accounts FOR ALL TO anon, authenticated USING (false);
+CREATE POLICY deny_all ON sessions FOR ALL TO anon, authenticated USING (false);
+CREATE POLICY deny_all ON verification_tokens FOR ALL TO anon, authenticated USING (false);
+CREATE POLICY deny_all ON notes FOR ALL TO anon, authenticated USING (false);
+CREATE POLICY deny_all ON user_settings FOR ALL TO anon, authenticated USING (false);
